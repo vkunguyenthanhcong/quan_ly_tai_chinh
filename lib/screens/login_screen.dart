@@ -1,0 +1,196 @@
+import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/screens/home_screen.dart';
+import '../services/auth_service.dart';
+import '../utils/password_utils.dart';
+import 'register_screen.dart';
+import 'main_screen.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final emailCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
+
+  final authService = AuthService();
+  bool _isLoading = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF121826),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 40),
+
+              const Text(
+                "Chào mừng 👋",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                "Đăng nhập để tiếp tục",
+                style: TextStyle(color: Colors.white54),
+              ),
+
+              const SizedBox(height: 40),
+
+              _input(emailCtrl, "Email"),
+              _input(passCtrl, "Mật khẩu (6 số)", isPassword: true),
+
+              const SizedBox(height: 30),
+
+              _loginButton(),
+
+              const Spacer(),
+
+              Center(
+                child: TextButton(
+                  onPressed: _isLoading
+                      ? null
+                      : () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const RegisterScreen(),
+                            ),
+                          );
+                        },
+                  child: const Text(
+                    "Chưa có tài khoản? Đăng ký",
+                    style: TextStyle(color: Colors.white70),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ================= BUTTON =================
+
+  Widget _loginButton() {
+    return SizedBox(
+      width: double.infinity,
+      child: ElevatedButton(
+        onPressed: _isLoading ? null : _handleLogin,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.blueAccent,
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
+        ),
+        child: _isLoading
+            ? const SizedBox(
+                height: 22,
+                width: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                "ĐĂNG NHẬP",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+      ),
+    );
+  }
+
+  /// ================= LOGIC =================
+
+  Future<void> _handleLogin() async {
+    final email = emailCtrl.text.trim();
+    final password = passCtrl.text.trim();
+
+    if (email.isEmpty || password.isEmpty) {
+      _showSnack("Vui lòng nhập email và mật khẩu", Colors.orange);
+      return;
+    }
+
+    if (!isValidGmail(email)) {
+      _showSnack("Email phải có dạng @gmail.com", Colors.orange);
+      return;
+    }
+
+    if (!isValidPassword(password)) {
+      _showSnack("Mật khẩu phải đúng 6 chữ số", Colors.orange);
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await authService.login(
+        email: email,
+        password: password,
+      );
+
+      if (!mounted) return;
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const MainScreen(),
+        ),
+      );
+    } catch (e) {
+      _showSnack(e.toString(), Colors.red);
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  /// ================= COMPONENT =================
+
+  Widget _input(
+    TextEditingController ctrl,
+    String hint, {
+    bool isPassword = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: ctrl,
+        obscureText: isPassword,
+        keyboardType:
+            isPassword ? TextInputType.number : TextInputType.emailAddress,
+        style: const TextStyle(color: Colors.white),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: const TextStyle(color: Colors.white38),
+          filled: true,
+          fillColor: const Color(0xFF1E2538),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+        ),
+      ),
+    );
+  }
+
+  void _showSnack(String text, Color color) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(text),
+        backgroundColor: color,
+      ),
+    );
+  }
+}
