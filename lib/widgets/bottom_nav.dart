@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -15,6 +14,7 @@ class BottomNav extends StatelessWidget {
     return BottomAppBar(
       color: const Color(0xFF1E2538),
       shape: const CircularNotchedRectangle(),
+      notchMargin: 8, // 👈 giúp FAB không dính
       child: SizedBox(
         height: 60,
         child: Row(
@@ -22,7 +22,7 @@ class BottomNav extends StatelessWidget {
           children: [
             _item(Icons.list, 0),
             _item(Icons.account_balance_wallet, 1),
-            const SizedBox(width: 40),
+            const SizedBox(width: 48), // 👈 chừa chỗ cho FAB
             _item(Icons.pie_chart, 3),
             _item(Icons.settings, 4),
           ],

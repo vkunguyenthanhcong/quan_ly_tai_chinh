@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/widgets/app_toast.dart';
 import '../services/category_service.dart';
 import '../services/transaction_service.dart';
 
@@ -31,52 +32,100 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _loadCategories();
   }
 
+  // ================= LOAD CATEGORY =================
+
   Future<void> _loadCategories() async {
-  try {
-    final data = await categoryService.getUserCategories(transactionType);
-    if (!mounted) return;
-
-    // 🔴 KIỂM TRA category_store null
-    final hasInvalid = data.any((e) =>
-        e['category_store'] == null ||
-        e['category_store'] is! Map<String, dynamic>);
-
-    if (hasInvalid) {
+    try {
+      final data = await categoryService.getUserCategories();
       if (!mounted) return;
 
-      // Thoát màn hiện tại
-      Navigator.pop(context);
-
-      // Đợi frame sau để show snackbar
-      Future.delayed(Duration.zero, () {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              "⚠️ Bạn cần thêm nhóm chi tiêu mới trước khi tạo giao dịch",
-            ),
-            backgroundColor: Colors.orange,
-          ),
-        );
+      setState(() {
+        categories = data;
+        loadingCategory = false;
       });
 
+      _syncCategoryWithType(); // 🔴 sync lần đầu
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      Future.delayed(Duration.zero, () {
+        _showSnack(e.toString(), Colors.red);
+      });
+    }
+  }
+
+  // ================= FILTER CATEGORY =================
+
+  List<Map<String, dynamic>> get filteredCategories {
+    return categories.where((c) {
+      final store = c['category_store'];
+      if (store == null || store is! Map<String, dynamic>) return false;
+      return store['type'] == transactionType;
+    }).toList();
+  }
+
+  // ================= SYNC CATEGORY WHEN TYPE CHANGE =================
+
+  void _syncCategoryWithType() {
+    final list = filteredCategories;
+
+    if (list.isEmpty) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSnack(
+          "⚠️ Chưa có nhóm giao dịch cho loại này. Vui lòng thêm mới.",
+          Colors.orange,
+        );
+        Navigator.pop(context);
+      });
       return;
     }
 
     setState(() {
-      categories = data;
-      categoryId = data.isNotEmpty ? data.first['id'] : null;
-      loadingCategory = false;
-    });
-  } catch (e) {
-    if (!mounted) return;
-    Navigator.pop(context);
-    Future.delayed(Duration.zero, () {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString()), backgroundColor: Colors.red),
-      );
+      categoryId = list.first['id']; // ✅ auto chọn category đầu tiên
     });
   }
-}
+
+  // ================= SAVE =================
+
+  Future<void> _saveTransaction() async {
+    if (categoryId == null ||
+        titleCtrl.text.trim().isEmpty ||
+        amountCtrl.text.trim().isEmpty) {
+      _showSnack("Vui lòng nhập đầy đủ thông tin", Colors.orange);
+      return;
+    }
+
+    final amount = int.tryParse(amountCtrl.text.trim());
+    if (amount == null || amount <= 0) {
+      _showSnack("Số tiền không hợp lệ", Colors.orange);
+      return;
+    }
+
+    setState(() => isSaving = true);
+
+    try {
+      await transactionService.addTransaction(
+        categoryId: categoryId!,
+        title: titleCtrl.text.trim(),
+        amount: amount,
+        type: transactionType,
+        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+        date: selectedDate,
+      );
+
+      if (!mounted) return;
+
+      _showSnack(" Đã thêm giao dịch", Colors.green);
+      await Future.delayed(const Duration(milliseconds: 200));
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showSnack(e.toString(), Colors.red);
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
+
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
@@ -129,9 +178,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      onPressed: isSaving
-                          ? null
-                          : () => Navigator.pop(context),
+                      onPressed:
+                          isSaving ? null : () => Navigator.pop(context),
                       child: const Text("HỦY"),
                     ),
                   ),
@@ -167,72 +215,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  // ================= LOGIC =================
-
-  Future<void> _saveTransaction() async {
-    if (categoryId == null ||
-        titleCtrl.text.trim().isEmpty ||
-        amountCtrl.text.trim().isEmpty) {
-      _showSnack("Vui lòng nhập đầy đủ thông tin", Colors.orange);
-      return;
-    }
-
-    final amount = int.tryParse(amountCtrl.text.trim());
-    if (amount == null || amount <= 0) {
-      _showSnack("Số tiền không hợp lệ", Colors.orange);
-      return;
-    }
-
-    setState(() => isSaving = true);
-
-    try {
-      await transactionService.addTransaction(
-        categoryId: categoryId!,
-        title: titleCtrl.text.trim(),
-        amount: amount,
-        type: transactionType,
-        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
-        date: selectedDate,
-      );
-
-      if (!mounted) return;
-
-      _showSnack("✅ Đã thêm giao dịch", Colors.green);
-      await Future.delayed(const Duration(milliseconds: 500));
-      Navigator.pop(context, true);
-    } catch (e) {
-      _showSnack(e.toString(), Colors.red);
-    } finally {
-      if (mounted) setState(() => isSaving = false);
-    }
-  }
-
-  // ================= UI COMPONENTS =================
+  // ================= COMPONENTS =================
 
   Widget _typeDropdown() {
     return _box(
       DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
+        child: DropdownButtonFormField<String>(
           value: transactionType,
-          isExpanded: true,
           dropdownColor: const Color(0xFF1E2538),
+          decoration: _decoration("Loại giao dịch"),
           items: const [
             DropdownMenuItem(
               value: 'expense',
-              child: Text("Chi tiêu", style: TextStyle(color: Colors.white)),
+              child: Text("Chi tiêu",
+                  style: TextStyle(color: Colors.white)),
             ),
             DropdownMenuItem(
               value: 'income',
-              child: Text("Thu nhập", style: TextStyle(color: Colors.white)),
+              child: Text("Thu nhập",
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
-          onChanged: (v) {
-            if (v == null) return;
+          onChanged: (value) {
+            if (value == null) return;
+
             setState(() {
-              transactionType = v;
-              loadingCategory = true;
+              transactionType = value;
+              categoryId = null; // 🔴 reset category cũ
             });
-            _loadCategories();
+
+            _syncCategoryWithType(); // 🔴 filter + set category mới
           },
         ),
       ),
@@ -240,6 +252,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _categoryDropdown() {
+    final list = filteredCategories;
+
     return _box(
       DropdownButtonHideUnderline(
         child: DropdownButton<String>(
@@ -250,14 +264,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             "Chọn nhóm giao dịch *",
             style: TextStyle(color: Colors.white38),
           ),
-          items: categories.map<DropdownMenuItem<String>>((c) {
-            final item = c as Map<String, dynamic>;
+          items: list.map<DropdownMenuItem<String>>((item) {
             final store = item['category_store'] as Map<String, dynamic>;
 
             return DropdownMenuItem<String>(
               value: item['id'] as String,
               child: Text(
-                store['name'] as String,
+                store['name'],
                 style: const TextStyle(color: Colors.white),
               ),
             );
@@ -350,8 +363,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   void _showSnack(String text, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text), backgroundColor: color),
-    );
+   AppToast.show(
+  context,
+  message: text,
+  type: ToastType.success,
+);
   }
 }

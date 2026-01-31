@@ -11,10 +11,7 @@ class SettingsPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF121826),
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
-        ),
+        
         title: const Text(
           "Cài đặt",
           style: TextStyle(fontWeight: FontWeight.bold),

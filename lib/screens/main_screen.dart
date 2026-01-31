@@ -14,7 +14,7 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _currentIndex = 1;
+  int _currentIndex = 0;
 
   final List<Widget> _pages = const [
   HomeScreen(),
@@ -42,6 +42,8 @@ class _MainScreenState extends State<MainScreen> {
 
       floatingActionButton: FloatingActionButton(
   backgroundColor: Colors.blueAccent,
+  shape: const CircleBorder(),
+  elevation: 6,
   child: const Icon(Icons.add),
   onPressed: () {
     Navigator.push(

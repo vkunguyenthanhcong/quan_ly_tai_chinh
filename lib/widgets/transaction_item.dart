@@ -19,7 +19,6 @@ class TransactionItem extends StatelessWidget {
   if (icon == null || icon!.isEmpty) {
     return const Icon(Icons.category, color: Colors.white);
   }
-  print(icon);
   return Image.asset(
     icon!,
     width: 50,

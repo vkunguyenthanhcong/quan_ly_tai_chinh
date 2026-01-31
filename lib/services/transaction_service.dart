@@ -1,7 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-class TransactionService {
+class   TransactionService {
   final supabase = Supabase.instance.client;
 
   Future<List<Map<String, dynamic>>> getTransactions() async {
@@ -125,6 +125,12 @@ Future<List<Map<String, dynamic>>> getMonthlySummary(int year) async {
       'expense': e.value['expense'],
     };
   }).toList();
+}
+Future<void> deleteTransaction(String id) async {
+  await supabase
+      .from('transactions')
+      .delete()
+      .eq('id', id);
 }
 
 }
