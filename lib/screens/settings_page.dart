@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:quan_ly_chi_tieu/screens/manage_category_screen.dart';
+import 'package:quan_ly_chi_tieu/screens/profile_screen.dart';
+import 'package:quan_ly_chi_tieu/screens/scan_bill_page.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -40,10 +42,17 @@ class SettingsPage extends StatelessWidget {
             },
           ),
           _settingItem(
-            icon: Icons.color_lens,
+            icon: Icons.camera,
             iconColor: Colors.orange,
-            title: "Giao diện hệ thống",
-            onTap: () {},
+            title: "Quét Bill Tự Động",
+            onTap: () {
+              Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const ScanBillPage(),
+      ),
+    );
+            },
           ),
           _settingItem(
             icon: Icons.people,
@@ -55,7 +64,12 @@ class SettingsPage extends StatelessWidget {
             icon: Icons.person,
             iconColor: Colors.teal,
             title: "Tài khoản",
-            onTap: () {},
+            onTap: () {
+              Navigator.push(
+  context,
+  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+);
+            },
           ),
           _settingItem(
             icon: Icons.notifications,

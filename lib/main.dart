@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'screens/login_screen.dart';
 import 'screens/main_screen.dart';
+import 'services/auth_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -11,22 +12,25 @@ Future<void> main() async {
     anonKey: 'sb_publishable_hY3bPs0ggrhEG3Xu0uPg7A_WLUBnwE4',
   );
 
-  runApp(const MyApp());
+  final authService = AuthService();
+  final isLoggedIn = await authService.isLoggedIn();
+
+  runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
+  final bool isLoggedIn;
+  const MyApp({super.key, required this.isLoggedIn});
+  
   @override
   Widget build(BuildContext context) {
-    final session = Supabase.instance.client.auth.currentSession;
-
     return MaterialApp(
+  
       debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
-      home: session == null
-          ? const LoginScreen()
-          : const MainScreen(),
+      home: isLoggedIn
+          ? const MainScreen()
+          : const LoginScreen(),
     );
   }
 }

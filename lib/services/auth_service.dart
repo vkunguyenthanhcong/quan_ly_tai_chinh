@@ -5,6 +5,14 @@ import '../utils/password_utils.dart';
 class AuthService {
   final supabase = Supabase.instance.client;
 
+  // ===== KEY LƯU PREFS =====
+  static const _keyUserId = 'user_id';
+  static const _keyUserEmail = 'user_email';
+  static const _keyLoginTime = 'login_time';
+
+  // ===== THỜI HẠN ĐĂNG NHẬP =====
+  static const Duration sessionDuration = Duration(days: 30);
+
   /// ================= REGISTER =================
   Future<void> register({
     required String email,
@@ -46,19 +54,50 @@ class AuthService {
     }
 
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('user_id', res['id']);
-    await prefs.setString('user_email', res['email']);
+
+    // 🔥 LƯU SESSION
+    await prefs.setString(_keyUserId, res['id']);
+    await prefs.setString(_keyUserEmail, res['email']);
+    await prefs.setInt(
+      _keyLoginTime,
+      DateTime.now().millisecondsSinceEpoch,
+    );
+  }
+
+  /// ================= CHECK LOGIN (CÓ THỜI HẠN) =================
+  Future<bool> isLoggedIn() async {
+    final prefs = await SharedPreferences.getInstance();
+
+    final userId = prefs.getString(_keyUserId);
+    final loginTime = prefs.getInt(_keyLoginTime);
+
+    if (userId == null || loginTime == null) {
+      return false;
+    }
+
+    final loginDate =
+        DateTime.fromMillisecondsSinceEpoch(loginTime);
+    final now = DateTime.now();
+
+    // ⛔ HẾT HẠN → LOGOUT
+    if (now.difference(loginDate) > sessionDuration) {
+      await logout();
+      return false;
+    }
+    return true;
+  }
+
+  /// ================= GET USER ID (CHO SERVICE KHÁC) =================
+  Future<String?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_keyUserId);
   }
 
   /// ================= LOGOUT =================
   Future<void> logout() async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-  }
-
-  /// ================= CHECK LOGIN =================
-  Future<bool> isLoggedIn() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.containsKey('user_id');
+    await prefs.remove(_keyUserId);
+    await prefs.remove(_keyUserEmail);
+    await prefs.remove(_keyLoginTime);
   }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_button.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import 'package:quan_ly_chi_tieu/widgets/app_toast.dart';
 import '../services/category_service.dart';
 import '../services/transaction_service.dart';
@@ -15,21 +17,44 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   final amountCtrl = TextEditingController();
   final noteCtrl = TextEditingController();
 
+  final FocusNode amountFocus = FocusNode();
+
   final categoryService = CategoryService();
   final transactionService = TransactionService();
 
   List<Map<String, dynamic>> categories = [];
+  List<int> quickAmounts = [];
   String? categoryId;
 
-  String transactionType = 'expense'; // expense | income
+  String transactionType = 'expense';
   DateTime selectedDate = DateTime.now();
+
   bool isSaving = false;
   bool loadingCategory = true;
+  bool showQuickAmount = false;
 
   @override
   void initState() {
     super.initState();
     _loadCategories();
+
+    amountFocus.addListener(() {
+      setState(() {
+        showQuickAmount = amountFocus.hasFocus;
+      });
+      _updateQuickAmounts();
+    });
+
+    amountCtrl.addListener(_updateQuickAmounts);
+  }
+
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    amountCtrl.dispose();
+    noteCtrl.dispose();
+    amountFocus.dispose();
+    super.dispose();
   }
 
   // ================= LOAD CATEGORY =================
@@ -44,13 +69,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         loadingCategory = false;
       });
 
-      _syncCategoryWithType(); // 🔴 sync lần đầu
+      _syncCategoryWithType();
     } catch (e) {
       if (!mounted) return;
       Navigator.pop(context);
-      Future.delayed(Duration.zero, () {
-        _showSnack(e.toString(), Colors.red);
-      });
+      _showSnack(e.toString(), Colors.red);
     }
   }
 
@@ -64,24 +87,42 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }).toList();
   }
 
-  // ================= SYNC CATEGORY WHEN TYPE CHANGE =================
+  // ================= SYNC CATEGORY =================
 
   void _syncCategoryWithType() {
     final list = filteredCategories;
 
     if (list.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSnack(
-          "⚠️ Chưa có nhóm giao dịch cho loại này. Vui lòng thêm mới.",
-          Colors.orange,
-        );
+        _showSnack("⚠️ Chưa có nhóm giao dịch cho loại này", Colors.orange);
         Navigator.pop(context);
       });
       return;
     }
 
     setState(() {
-      categoryId = list.first['id']; // ✅ auto chọn category đầu tiên
+      categoryId = list.first['id'];
+    });
+  }
+
+  // ================= QUICK AMOUNT =================
+
+  void _updateQuickAmounts() {
+    if (!showQuickAmount) {
+      setState(() => quickAmounts = []);
+      return;
+    }
+
+    final text = amountCtrl.text.trim();
+    final base = int.tryParse(text);
+
+    if (base == null || base <= 0) {
+      setState(() => quickAmounts = []);
+      return;
+    }
+
+    setState(() {
+      quickAmounts = [base * 10000, base * 100000];
     });
   }
 
@@ -115,7 +156,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
       if (!mounted) return;
 
-      _showSnack(" Đã thêm giao dịch", Colors.green);
+      _showSnack("Đã thêm giao dịch", Colors.green);
       await Future.delayed(const Duration(milliseconds: 200));
       Navigator.pop(context, true);
     } catch (e) {
@@ -156,11 +197,15 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 _categoryDropdown(),
 
               _inputField(titleCtrl, "Tên giao dịch *"),
+
               _inputField(
                 amountCtrl,
                 "Số tiền giao dịch *",
                 keyboardType: TextInputType.number,
+                focusNode: amountFocus,
               ),
+
+              if (quickAmounts.isNotEmpty) _quickAmountButtons(),
 
               _datePicker(),
               _noteField(),
@@ -170,40 +215,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed:
-                          isSaving ? null : () => Navigator.pop(context),
-                      child: const Text("HỦY"),
+                    child: AppButton(
+                      text: "HỦY",
+                      color: AppColors.danger,
+                      onPressed: isSaving
+                          ? () {}
+                          : () => Navigator.pop(context),
                     ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blueAccent,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      onPressed: isSaving ? null : _saveTransaction,
-                      child: isSaving
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text("LƯU"),
+                    child: AppButton(
+                      text: "LƯU",
+                      onPressed: isSaving ? () {} : _saveTransaction,
                     ),
                   ),
                 ],
@@ -217,6 +241,35 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   // ================= COMPONENTS =================
 
+  Widget _quickAmountButtons() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: quickAmounts.map((value) {
+          return ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2A3350),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
+            ),
+            onPressed: () {
+              amountCtrl.text = value.toString();
+              amountFocus.unfocus();
+            },
+            child: Text(
+              _formatMoney(value),
+              style: const TextStyle(color: Colors.white),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
   Widget _typeDropdown() {
     return _box(
       DropdownButtonHideUnderline(
@@ -227,24 +280,20 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           items: const [
             DropdownMenuItem(
               value: 'expense',
-              child: Text("Chi tiêu",
-                  style: TextStyle(color: Colors.white)),
+              child: Text("Chi tiêu", style: TextStyle(color: Colors.white)),
             ),
             DropdownMenuItem(
               value: 'income',
-              child: Text("Thu nhập",
-                  style: TextStyle(color: Colors.white)),
+              child: Text("Thu nhập", style: TextStyle(color: Colors.white)),
             ),
           ],
           onChanged: (value) {
             if (value == null) return;
-
             setState(() {
               transactionType = value;
-              categoryId = null; // 🔴 reset category cũ
+              categoryId = null;
             });
-
-            _syncCategoryWithType(); // 🔴 filter + set category mới
+            _syncCategoryWithType();
           },
         ),
       ),
@@ -264,11 +313,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             "Chọn nhóm giao dịch *",
             style: TextStyle(color: Colors.white38),
           ),
-          items: list.map<DropdownMenuItem<String>>((item) {
+          items: list.map((item) {
             final store = item['category_store'] as Map<String, dynamic>;
-
             return DropdownMenuItem<String>(
-              value: item['id'] as String,
+              value: item['id'],
               child: Text(
                 store['name'],
                 style: const TextStyle(color: Colors.white),
@@ -313,11 +361,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     TextEditingController ctrl,
     String hint, {
     TextInputType keyboardType = TextInputType.text,
+    FocusNode? focusNode,
   }) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: TextField(
         controller: ctrl,
+        focusNode: focusNode,
         keyboardType: keyboardType,
         style: const TextStyle(color: Colors.white),
         decoration: _decoration(hint),
@@ -362,11 +412,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  String _formatMoney(int value) {
+    return value.toString().replaceAllMapped(
+      RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
+      (m) => '${m[1]}.',
+    );
+  }
+
   void _showSnack(String text, Color color) {
-   AppToast.show(
-  context,
-  message: text,
-  type: ToastType.success,
-);
+    AppToast.show(context, message: text, type: ToastType.success);
   }
 }
