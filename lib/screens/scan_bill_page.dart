@@ -4,10 +4,78 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:intl/intl.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_button.dart';
 import 'package:quan_ly_chi_tieu/services/transaction_service.dart';
 import 'package:quan_ly_chi_tieu/widgets/app_toast.dart';
 
 import '../services/category_service.dart';
+String _removeVietnameseDiacritics(String str) {
+  const withDiacritics =
+      'àáạảãâầấậẩẫăằắặẳẵ'
+      'èéẹẻẽêềếệểễ'
+      'ìíịỉĩ'
+      'òóọỏõôồốộổỗơờớợởỡ'
+      'ùúụủũưừứựửữ'
+      'ỳýỵỷỹ'
+      'đ';
+
+  const withoutDiacritics =
+      'aaaaaaaaaaaaaaaaa'
+      'eeeeeeeeeee'
+      'iiiii'
+      'ooooooooooooooooo'
+      'uuuuuuuuuuu'
+      'yyyyy'
+      'd';
+
+  for (int i = 0; i < withDiacritics.length; i++) {
+    str = str.replaceAll(withDiacritics[i], withoutDiacritics[i]);
+    str = str.replaceAll(
+      withDiacritics[i].toUpperCase(),
+      withoutDiacritics[i].toUpperCase(),
+    );
+  }
+  return str;
+}
+String? _extractTimeLine(String text) {
+  final lines = text.split('\n');
+
+  final timeRegex = RegExp(r'\b\d{1,2}:\d{2}\b');
+  final dateRegex =
+      RegExp(r'\b\d{1,2}/\d{1,2}/\d{4}\b');
+
+  String? time;
+  String? date;
+
+  // Duyệt NGƯỢC từ cuối (quan trọng)
+  for (int i = lines.length - 1; i >= 0; i--) {
+    String line = lines[i].trim();
+    if (line.isEmpty) continue;
+
+    // 🔧 FIX NĂM BỊ TÁCH: "09/02/2 026" → "09/02/2026"
+    line = line.replaceAllMapped(
+      RegExp(r'(\d{1,2}/\d{1,2}/)(\d)\s+(\d{3})'),
+      (m) => '${m[1]}${m[2]}${m[3]}',
+    );
+
+    if (time == null && timeRegex.hasMatch(line)) {
+      time = timeRegex.firstMatch(line)!.group(0);
+    }
+
+    if (date == null && dateRegex.hasMatch(line)) {
+      date = dateRegex.firstMatch(line)!.group(0);
+    }
+
+    if (time != null && date != null) {
+      return '$time $date';
+    }
+  }
+
+  return null;
+}
+
+
+
 
 class ScanBillPage extends StatefulWidget {
   const ScanBillPage({super.key});
@@ -96,7 +164,10 @@ class _ScanBillPageState extends State<ScanBillPage> {
   // ================= PARSE =================
 
   void _parseText(String text) {
-    titleCtrl.text = _extractTitle(text) ?? 'Chi tiêu';
+    print(_extractTimeLine(text));
+    titleCtrl.text =
+      _extractTimeLine(text) ??
+      'Chi tiêu';
     amountCtrl.text = _extractAmount(text)?.toString() ?? '';
     dateCtrl.text =
         DateFormat('dd/MM/yyyy').format(_extractDate(text) ?? DateTime.now());
@@ -131,19 +202,64 @@ class _ScanBillPageState extends State<ScanBillPage> {
   // ================= CATEGORY LOGIC =================
 
   String _detectCategoryName(String text) {
-    final t = text.toLowerCase();
+  final t = _removeVietnameseDiacritics(text.toLowerCase());
 
-    if (t.contains('an uong') || t.contains('com') || t.contains('cafe')) {
-      return 'Ăn uống';
-    }
-    if (t.contains('xang') || t.contains('grab')) {
-      return 'Đi lại';
-    }
-    if (t.contains('shopee') || t.contains('lazada')) {
-      return 'Mua sắm';
-    }
-    return 'Khác';
+  // 🍜 Ăn uống
+  if (
+      t.contains('an uong') ||
+      t.contains('an') ||
+      t.contains('uong') ||
+      t.contains('com') ||
+      t.contains('bun') ||
+      t.contains('pho') ||
+      t.contains('chao') ||
+      t.contains('lau') ||
+      t.contains('do an') ||
+      t.contains('nuoc') ||
+      t.contains('cafe') ||
+      t.contains('coffee') ||
+      t.contains('cf') ||
+      t.contains('ca phe') ||
+      t.contains('tra sua') ||
+      t.contains('quan an') ||
+      t.contains('nha hang')
+  ) {
+    return 'Ăn uống';
   }
+
+  // 🚗 Đi lại
+  if (
+      t.contains('xang') ||
+      t.contains('do xang') ||
+      t.contains('grab') ||
+      t.contains('be') ||
+      t.contains('gojek') ||
+      t.contains('xe') ||
+      t.contains('taxi') ||
+      t.contains('gui xe') ||
+      t.contains('ve xe')
+  ) {
+    return 'Đi lại';
+  }
+
+  // 🛍️ Mua sắm
+  if (
+      t.contains('shopee') ||
+      t.contains('lazada') ||
+      t.contains('tiki') ||
+      t.contains('sendo') ||
+      t.contains('shopping') ||
+      t.contains('mua sam') ||
+      t.contains('quan ao') ||
+      t.contains('giay') ||
+      t.contains('my pham')
+  ) {
+    return 'Mua sắm';
+  }
+
+  return 'Khác';
+}
+
 
   void _mapDetectedCategory(String detectedName) {
     final match = userCategories.firstWhere(
@@ -216,7 +332,7 @@ Future<void> _save() async {
       body: _loadingCategory
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
               child: Column(
                 children: [
                   _image == null ? _pickBox() : _preview(),
@@ -231,108 +347,352 @@ Future<void> _save() async {
             ),
     );
   }
-
+Widget _sectionTitle(String text) {
+  return Text(
+    text,
+    style: const TextStyle(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.3,
+    ),
+  );
+}
   Widget _pickBox() {
-    return Column(
-      children: [
-        const Icon(Icons.document_scanner,
-            size: 80, color: Colors.white38),
-        const SizedBox(height: 12),
-        ElevatedButton.icon(
-          onPressed: () => _pickImage(ImageSource.camera),
-          icon: const Icon(Icons.camera_alt),
-          label: const Text("Chụp bill"),
-        ),
-        const SizedBox(height: 8),
-        OutlinedButton.icon(
-          onPressed: () => _pickImage(ImageSource.gallery),
-          icon: const Icon(Icons.image),
-          label: const Text("Chọn ảnh"),
+  return Container(
+    padding: const EdgeInsets.all(20),
+    decoration: BoxDecoration(
+      color: const Color(0xFF1A2035),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Colors.white10,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.35),
+          blurRadius: 14,
+          offset: const Offset(0, 6),
         ),
       ],
-    );
-  }
+    ),
+    child: Column(
+      children: [
+        Container(
+          width: 90,
+          height: 90,
+          decoration: BoxDecoration(
+            color: const Color(0xFF232A44),
+            borderRadius: BorderRadius.circular(24),
+          ),
+          child: const Icon(
+            Icons.document_scanner_rounded,
+            size: 48,
+            color: Colors.blueAccent,
+          ),
+        ),
 
-  Widget _preview() {
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
-      child: Image.file(_image!),
-    );
-  }
+        const SizedBox(height: 16),
+
+        const Text(
+          "Quét hóa đơn",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+
+        const SizedBox(height: 6),
+
+        const Text(
+          "Chụp hoặc chọn ảnh hóa đơn để tự động nhận diện",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: Colors.white54,
+            fontSize: 13,
+          ),
+        ),
+
+        const SizedBox(height: 20),
+
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton.icon(
+            onPressed: () => _pickImage(ImageSource.camera),
+            icon: const Icon(Icons.camera_alt_rounded),
+            label: const Text("Chụp hóa đơn"),
+            style: ElevatedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () => _pickImage(ImageSource.gallery),
+            icon: const Icon(Icons.image_rounded),
+            label: const Text("Chọn từ thư viện"),
+            style: OutlinedButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              side: const BorderSide(color: Colors.white24),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+Widget _rescanItem({
+  required IconData icon,
+  required String title,
+  required VoidCallback onTap,
+}) {
+  return ListTile(
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: const Color(0xFF232A44),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Icon(icon, color: Colors.blueAccent),
+    ),
+    title: Text(
+      title,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+    ),
+    onTap: onTap,
+  );
+}
+
+void _showRescanOptions() {
+  showModalBottomSheet(
+    context: context,
+    backgroundColor: const Color(0xFF1A2035),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(4),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            _rescanItem(
+              icon: Icons.camera_alt_rounded,
+              title: "Chụp lại bằng camera",
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+
+            _rescanItem(
+              icon: Icons.image_rounded,
+              title: "Chọn ảnh từ thư viện",
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+
+            const SizedBox(height: 12),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+
+Widget _preview() {
+  return Stack(
+    children: [
+      GestureDetector(
+        onTap: () {
+          showDialog(
+            context: context,
+            barrierColor: Colors.black.withOpacity(0.85),
+            builder: (_) => GestureDetector(
+              onTap: () => Navigator.pop(context),
+              child: Center(
+                child: InteractiveViewer(
+                  child: Image.file(_image!),
+                ),
+              ),
+            ),
+          );
+        },
+        child: Container(
+          width: double.infinity,
+          height: 180,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 10,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(16),
+            child: Image.file(
+              _image!,
+              fit: BoxFit.cover,
+            ),
+          ),
+        ),
+      ),
+
+      // 🔁 NÚT QUÉT LẠI
+      Positioned(
+  top: 10,
+  right: 10,
+  child: InkWell(
+    onTap: _loadingOCR ? null : _showRescanOptions,
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.6),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: const [
+          Icon(Icons.refresh_rounded, size: 18, color: Colors.white),
+          SizedBox(width: 6),
+          Text("Quét lại", style: TextStyle(color: Colors.white)),
+        ],
+      ),
+    ),
+  ),
+),
+    ],
+  );
+}
+
 
   Widget _form() {
-    return Column(
+  return Container(
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      color: const Color(0xFF1A2035),
+      borderRadius: BorderRadius.circular(18),
+      boxShadow: [
+        BoxShadow(
+          color: Colors.black.withOpacity(0.35),
+          blurRadius: 12,
+          offset: const Offset(0, 6),
+        ),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _sectionTitle("Thông tin giao dịch"),
+
+        const SizedBox(height: 12),
+
         _input(titleCtrl, "Tên giao dịch"),
         _input(amountCtrl, "Số tiền",
             keyboard: TextInputType.number),
         _input(dateCtrl, "Ngày"),
 
+        const SizedBox(height: 12),
+
+        _sectionTitle("Danh mục"),
+
         const SizedBox(height: 8),
 
         _categoryDropdown(),
 
-        const SizedBox(height: 20),
+        const SizedBox(height: 24),
 
-        ElevatedButton(
+        AppButton(
           onPressed: _save,
-          child: const Text("LƯU GIAO DỊCH"),
+          text: "LƯU GIAO DỊCH",
         ),
       ],
-    );
-  }
+    ),
+  );
+}
+
 
   // ================= BEAUTIFUL DROPDOWN =================
 
-  Widget _categoryDropdown() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1E2538),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(
-          color: selectedCategoryId == null
-              ? Colors.redAccent.withOpacity(0.6)
-              : Colors.transparent,
-        ),
+ Widget _categoryDropdown() {
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 14),
+    decoration: BoxDecoration(
+      color: const Color(0xFF232A44),
+      borderRadius: BorderRadius.circular(14),
+      border: Border.all(
+        color: selectedCategoryId == null
+            ? Colors.redAccent.withOpacity(0.6)
+            : Colors.transparent,
       ),
-      child: DropdownButtonHideUnderline(
-        child: DropdownButton<String>(
-          value: selectedCategoryId,
-          isExpanded: true,
-          dropdownColor: const Color(0xFF1E2538),
-          icon: const Icon(Icons.keyboard_arrow_down,
-              color: Colors.white70),
-          hint: const Text(
-            "Chọn loại chi tiêu *",
-            style: TextStyle(color: Colors.white38),
-          ),
-          items: userCategories.map((c) {
-            final store = c['category_store'];
-            return DropdownMenuItem<String>(
-              value: c['id'],
-              child: Row(
-                children: [
-                  _categoryIcon(store['icon']),
-                  const SizedBox(width: 10),
-                  Text(
-                    store['name'],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                    ),
+    ),
+    child: DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selectedCategoryId,
+        isExpanded: true,
+        dropdownColor: const Color(0xFF232A44),
+        icon: const Icon(Icons.expand_more, color: Colors.white54),
+        hint: const Text(
+          "Chọn loại chi tiêu *",
+          style: TextStyle(color: Colors.white38),
+        ),
+        items: userCategories.map((c) {
+          final store = c['category_store'];
+          return DropdownMenuItem<String>(
+            value: c['id'],
+            child: Row(
+              children: [
+                _categoryIcon(store['icon']),
+                const SizedBox(width: 10),
+                Text(
+                  store['name'],
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
                   ),
-                ],
-              ),
-            );
-          }).toList(),
-          onChanged: (v) {
-            setState(() => selectedCategoryId = v);
-          },
-        ),
+                ),
+              ],
+            ),
+          );
+        }).toList(),
+        onChanged: (v) => setState(() => selectedCategoryId = v),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   Widget _categoryIcon(dynamic iconPath) {
   if (iconPath == null || iconPath.toString().isEmpty) {
@@ -364,33 +724,45 @@ Future<void> _save() async {
 
   // ================= INPUT =================
 
-  Widget _input(
-    TextEditingController ctrl,
-    String label, {
-    TextInputType keyboard = TextInputType.text,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: TextField(
-        controller: ctrl,
-        keyboardType: keyboard,
-        style: const TextStyle(color: Colors.white),
-        decoration: InputDecoration(
-          labelText: label,
-          labelStyle: const TextStyle(color: Colors.white70),
-          filled: true,
-          fillColor: const Color(0xFF1E2538),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: BorderSide.none,
-          ),
+ Widget _input(
+  TextEditingController ctrl,
+  String label, {
+  TextInputType keyboard = TextInputType.text,
+}) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 14),
+    child: TextField(
+      controller: ctrl,
+      keyboardType: keyboard,
+      style: const TextStyle(
+        color: Colors.white,
+        fontSize: 15,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: Colors.white54,
+          fontSize: 13,
+        ),
+        floatingLabelStyle: const TextStyle(
+          color: Colors.blueAccent,
+        ),
+        filled: true,
+        fillColor: const Color(0xFF232A44),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(14),
+          borderSide: BorderSide.none,
         ),
       ),
-    );
-  }
+    ),
+  );
+}
+
 
   void _toast(String text) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(text)));
   }
-}
+} 
