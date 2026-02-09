@@ -308,7 +308,7 @@ Future<void> _save() async {
       type: 'expense',
       date: date,
     );
-    await transactionService.updateTodayExpenseWidget();
+    //await transactionService.updateTodayExpenseWidget();
 
     AppToast.show(context, message: "Đã lưu giao dịch", type: ToastType.success);
     await Future.delayed(const Duration(milliseconds: 300));

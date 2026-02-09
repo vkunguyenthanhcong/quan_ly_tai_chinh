@@ -24,7 +24,7 @@ Future<void> main() async {
   final WidgetService = TransactionService();
   // 🔥 AUTO UPDATE WIDGET KHI APP START
   if (isLoggedIn) {
-    await WidgetService.updateTodayExpenseWidget();
+    //await WidgetService.updateTodayExpenseWidget();
   }
 
   runApp(MyApp(isLoggedIn: isLoggedIn));

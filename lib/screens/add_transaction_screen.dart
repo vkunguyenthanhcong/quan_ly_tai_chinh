@@ -133,7 +133,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         note: "",
         date: selectedDate,
       );
-      await transactionService.updateTodayExpenseWidget();
+      //await transactionService.updateTodayExpenseWidget();
 
       if (!mounted) return;
       _showSnack("Đã thêm giao dịch", Colors.green);
