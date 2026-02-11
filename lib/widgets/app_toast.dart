@@ -7,7 +7,7 @@ class AppToast {
     BuildContext context, {
     required String message,
     ToastType type = ToastType.success,
-    Duration duration = const Duration(seconds: 2),
+    Duration duration = const Duration(seconds: 1),
   }) {
     final overlay = Overlay.of(context);
     if (overlay == null) return;
@@ -55,7 +55,7 @@ class _ToastWidgetState extends State<_ToastWidget>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 100),
+      duration: const Duration(milliseconds: 50),
     );
     _scale = CurvedAnimation(
       parent: _controller,

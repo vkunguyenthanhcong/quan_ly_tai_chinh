@@ -140,7 +140,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       await Future.delayed(const Duration(milliseconds: 200));
       Navigator.pop(context, true);
     } catch (e) {
-      _showSnack(e.toString(), Colors.red);
+      _showSnack("Lỗi", Colors.red);
     } finally {
       if (mounted) setState(() => isSaving = false);
     }
