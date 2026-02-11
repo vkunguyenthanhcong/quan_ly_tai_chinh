@@ -91,6 +91,7 @@ class SettingsPage extends StatelessWidget {
 );
   },
 ),
+
         ],
       ),
     );

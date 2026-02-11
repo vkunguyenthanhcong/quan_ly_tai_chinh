@@ -1,0 +1,75 @@
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:background="#0B1E3A">
+
+    <!-- TIÊU ĐỀ -->
+    <TextView
+        android:id="@+id/tvTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="HÔM NAY"
+        android:textColor="#9FB3D1"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
+    <!-- SỐ TIỀN -->
+    <TextView
+        android:id="@+id/tvAmount"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:text="0 ₫"
+        android:textColor="#FFFFFF"
+        android:textSize="26sp"
+        android:textStyle="bold" />
+
+    <!-- PHỤ -->
+    <TextView
+        android:id="@+id/tvSub"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:text="Tổng chi tiêu"
+        android:textColor="#AFC3E0"
+        android:textSize="12sp" />
+
+    <!-- ===== BUTTON ROW ===== -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <!-- Scan -->
+        <TextView
+            android:id="@+id/btnScan"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="📷"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:background="#243B55" />
+
+        <!-- Add -->
+        <TextView
+            android:id="@+id/btnAdd"
+            android:layout_width="0dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:text="➕"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:background="#3B82F6" />
+
+    </LinearLayout>
+
+</LinearLayout>
+    

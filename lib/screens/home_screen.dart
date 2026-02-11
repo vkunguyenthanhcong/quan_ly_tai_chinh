@@ -13,7 +13,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final transactionService = TransactionService();
-
+  
     return Scaffold(
       backgroundColor: const Color(0xFF121826),
       body: SafeArea(

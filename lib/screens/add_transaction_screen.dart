@@ -39,9 +39,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     _loadCategories();
 
     amountFocus.addListener(() {
-      setState(() {
-        showQuickAmount = amountFocus.hasFocus;
-      });
+      setState(() => showQuickAmount = amountFocus.hasFocus);
       _updateQuickAmounts();
     });
 
@@ -57,18 +55,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     super.dispose();
   }
 
-  // ================= LOAD CATEGORY =================
+  // ================= LOGIC (GIỮ NGUYÊN) =================
 
   Future<void> _loadCategories() async {
     try {
       final data = await categoryService.getUserCategories();
       if (!mounted) return;
-
       setState(() {
         categories = data;
         loadingCategory = false;
       });
-
       _syncCategoryWithType();
     } catch (e) {
       if (!mounted) return;
@@ -76,8 +72,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       _showSnack(e.toString(), Colors.red);
     }
   }
-
-  // ================= FILTER CATEGORY =================
 
   List<Map<String, dynamic>> get filteredCategories {
     return categories.where((c) {
@@ -87,11 +81,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }).toList();
   }
 
-  // ================= SYNC CATEGORY =================
-
   void _syncCategoryWithType() {
     final list = filteredCategories;
-
     if (list.isEmpty) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showSnack("⚠️ Chưa có nhóm giao dịch cho loại này", Colors.orange);
@@ -99,34 +90,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       });
       return;
     }
-
-    setState(() {
-      categoryId = list.first['id'];
-    });
+    setState(() => categoryId = list.first['id']);
   }
-
-  // ================= QUICK AMOUNT =================
 
   void _updateQuickAmounts() {
     if (!showQuickAmount) {
       setState(() => quickAmounts = []);
       return;
     }
-
-    final text = amountCtrl.text.trim();
-    final base = int.tryParse(text);
-
+    final base = int.tryParse(amountCtrl.text.trim());
     if (base == null || base <= 0) {
       setState(() => quickAmounts = []);
       return;
     }
-
     setState(() {
-      quickAmounts = [base * 10000, base * 100000];
+      quickAmounts = [base * 100, base * 1000, base * 10000];
     });
   }
-
-  // ================= SAVE =================
 
   Future<void> _saveTransaction() async {
     if (categoryId == null ||
@@ -150,12 +130,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         title: titleCtrl.text.trim(),
         amount: amount,
         type: transactionType,
-        note: noteCtrl.text.trim().isEmpty ? null : noteCtrl.text.trim(),
+        note: "",
         date: selectedDate,
       );
+      await transactionService.updateTodayExpenseWidget();
 
       if (!mounted) return;
-
       _showSnack("Đã thêm giao dịch", Colors.green);
       await Future.delayed(const Duration(milliseconds: 200));
       Navigator.pop(context, true);
@@ -166,14 +146,14 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     }
   }
 
-  // ================= UI =================
+  // ================= UI (CHỈ SỬA GIAO DIỆN) =================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121826),
+      backgroundColor: const Color(0xFF0F1629),
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121826),
+        backgroundColor: const Color(0xFF0F1629),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -186,51 +166,47 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           padding: const EdgeInsets.all(16),
           child: Column(
             children: [
-              _typeDropdown(),
-
-              if (loadingCategory)
-                const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
-                  child: CircularProgressIndicator(),
-                )
-              else
-                _categoryDropdown(),
-
-              _inputField(titleCtrl, "Tên giao dịch *"),
-
-              _inputField(
-                amountCtrl,
-                "Số tiền giao dịch *",
-                keyboardType: TextInputType.number,
-                focusNode: amountFocus,
+              _card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle("Thông tin giao dịch"),
+                    _formField("Tên giao dịch", titleCtrl),
+                    _formField(
+                      "Số tiền",
+                      amountCtrl,
+                      keyboardType: TextInputType.number,
+                      focusNode: amountFocus,
+                    ),
+                    if (quickAmounts.isNotEmpty) _quickAmountButtons(),
+                    _datePicker(),
+                  ],
+                ),
               ),
-
-              if (quickAmounts.isNotEmpty) _quickAmountButtons(),
-
-              _datePicker(),
-              _noteField(),
-
+              const SizedBox(height: 16),
+              _card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _sectionTitle("Danh mục"),
+                    _typeDropdown(),
+                    if (loadingCategory)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 12),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else
+                      _categoryDropdown(),
+                  ],
+                ),
+              ),
               const SizedBox(height: 24),
-
-              Row(
-                children: [
-                  Expanded(
-                    child: AppButton(
-                      text: "HỦY",
-                      color: AppColors.danger,
-                      onPressed: isSaving
-                          ? () {}
-                          : () => Navigator.pop(context),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: AppButton(
-                      text: "LƯU",
-                      onPressed: isSaving ? () {} : _saveTransaction,
-                    ),
-                  ),
-                ],
+              SizedBox(
+                width: double.infinity,
+                child: AppButton(
+                  text: isSaving ? "ĐANG LƯU..." : "LƯU GIAO DỊCH",
+                  onPressed: isSaving ? () {} : _saveTransaction,
+                ),
               ),
             ],
           ),
@@ -239,7 +215,75 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
-  // ================= COMPONENTS =================
+  // ================= COMPONENT UI =================
+
+  Widget _card({required Widget child}) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1B2440),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: child,
+    );
+  }
+
+  Widget _sectionTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+    );
+  }
+
+  Widget _formField(
+    String label,
+    TextEditingController ctrl, {
+    TextInputType keyboardType = TextInputType.text,
+    FocusNode? focusNode,
+    int maxLines = 1,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: Colors.blueAccent,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Container(
+            decoration: BoxDecoration(
+              color: const Color(0xFF232E52),
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: TextField(
+              controller: ctrl,
+              focusNode: focusNode,
+              keyboardType: keyboardType,
+              maxLines: maxLines,
+              style: const TextStyle(color: Colors.white),
+              decoration: const InputDecoration(
+                contentPadding:
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _quickAmountButtons() {
     return Padding(
@@ -250,10 +294,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: quickAmounts.map((value) {
           return ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF2A3350),
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+              elevation: 0,
+              backgroundColor: const Color(0xFF2F3A5F),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
             onPressed: () {
@@ -275,8 +321,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       DropdownButtonHideUnderline(
         child: DropdownButtonFormField<String>(
           value: transactionType,
-          dropdownColor: const Color(0xFF1E2538),
-          decoration: _decoration("Loại giao dịch"),
+          dropdownColor: const Color(0xFF232E52),
+          decoration: const InputDecoration(border: InputBorder.none),
           items: const [
             DropdownMenuItem(
               value: 'expense',
@@ -302,24 +348,36 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _categoryDropdown() {
     final list = filteredCategories;
-
     return _box(
       DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: categoryId,
           isExpanded: true,
-          dropdownColor: const Color(0xFF1E2538),
-          hint: const Text(
-            "Chọn nhóm giao dịch *",
-            style: TextStyle(color: Colors.white38),
-          ),
+          dropdownColor: const Color(0xFF232E52),
           items: list.map((item) {
             final store = item['category_store'] as Map<String, dynamic>;
+            final String? iconPath = store['icon'];
             return DropdownMenuItem<String>(
               value: item['id'],
-              child: Text(
-                store['name'],
-                style: const TextStyle(color: Colors.white),
+              child: Row(
+                children: [
+                  if (iconPath != null && iconPath.isNotEmpty)
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(6),
+                      child: Image.asset(
+                        iconPath,
+                        width: 22,
+                        height: 22,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  if (iconPath != null && iconPath.isNotEmpty)
+                    const SizedBox(width: 10),
+                  Text(
+                    store['name'],
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ],
               ),
             );
           }).toList(),
@@ -347,42 +405,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Ngày giao dịch: ${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
+              "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
               style: const TextStyle(color: Colors.white),
             ),
-            const Icon(Icons.calendar_today, color: Colors.white54),
+            const Icon(Icons.calendar_today, color: Colors.white54, size: 18),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _inputField(
-    TextEditingController ctrl,
-    String hint, {
-    TextInputType keyboardType = TextInputType.text,
-    FocusNode? focusNode,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
-        controller: ctrl,
-        focusNode: focusNode,
-        keyboardType: keyboardType,
-        style: const TextStyle(color: Colors.white),
-        decoration: _decoration(hint),
-      ),
-    );
-  }
-
-  Widget _noteField() {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
-      child: TextField(
-        controller: noteCtrl,
-        maxLines: 3,
-        style: const TextStyle(color: Colors.white),
-        decoration: _decoration("Ghi chú"),
       ),
     );
   }
@@ -390,25 +418,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _box(Widget child) {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2538),
+        color: const Color(0xFF232E52),
         borderRadius: BorderRadius.circular(14),
       ),
       child: child,
-    );
-  }
-
-  InputDecoration _decoration(String hint) {
-    return InputDecoration(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white38),
-      filled: true,
-      fillColor: const Color(0xFF1E2538),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
-        borderSide: BorderSide.none,
-      ),
     );
   }
 

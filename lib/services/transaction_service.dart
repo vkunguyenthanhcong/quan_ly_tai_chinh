@@ -1,9 +1,40 @@
+import 'package:home_widget/home_widget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class   TransactionService {
   final supabase = Supabase.instance.client;
+Future<int> getTodayExpenseTotal() async {
+  final now = DateTime.now();
+  final startOfDay = DateTime(now.year, now.month, now.day);
+  final endOfDay = startOfDay.add(const Duration(days: 1));
 
+  final data = await supabase
+      .from('transactions')
+      .select('amount')
+      .eq('type', 'expense')
+      .gte('date', startOfDay.toIso8601String())
+      .lt('date', endOfDay.toIso8601String());
+
+  int total = 0;
+  for (final item in data) {
+    total += item['amount'] as int;
+  }
+  return total;
+}
+Future<void> updateTodayExpenseWidget() async {
+  final total = await getTodayExpenseTotal();
+    print(total);
+  await HomeWidget.saveWidgetData(
+    'today_expense',
+    '$total',
+  );
+
+  await HomeWidget.updateWidget(
+    androidName: 'ExpenseWidget',
+    iOSName: 'ExpenseWidget',
+  );
+}
   Future<List<Map<String, dynamic>>> getTransactions() async {
   final prefs = await SharedPreferences.getInstance();
   final userId = prefs.getString('user_id');

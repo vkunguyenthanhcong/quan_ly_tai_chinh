@@ -24,6 +24,10 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+<string>Ứng dụng cần quyền nhận diện giọng nói</string>
+<key>NSMicrophoneUsageDescription</key>
+<string>Ứng dụng cần quyền micro</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
