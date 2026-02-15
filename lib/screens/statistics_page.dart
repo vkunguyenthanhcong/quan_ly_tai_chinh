@@ -66,7 +66,6 @@ class _StatisticsPageState extends State<StatisticsPage>
     );
   }
 
-  /// ===== DROPDOWN THÁNG / NĂM =====
   Widget _monthYearFilter() {
     return Padding(
       padding: const EdgeInsets.all(12),
@@ -121,8 +120,6 @@ class _StatisticsPageState extends State<StatisticsPage>
     );
   }
 }
-
-/// ================= TAB =================
 
 class _StatisticTab extends StatelessWidget {
   final String type;

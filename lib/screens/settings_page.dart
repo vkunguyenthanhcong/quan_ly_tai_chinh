@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:quan_ly_chi_tieu/screens/app_info_page.dart';
+import 'package:quan_ly_chi_tieu/screens/dept_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/manage_category_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/profile_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/scan_bill_page.dart';
@@ -41,7 +42,23 @@ class SettingsPage extends StatelessWidget {
       ),
     );
             },
+            
           ),
+          _settingItem(
+            icon: Icons.money,
+            iconColor: Colors.red,
+            title: "Quản lý khoản nợ",
+            onTap: () {
+              Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const DebtPage(),
+      ),
+    );
+            },
+            
+          ),
+          
           _settingItem(
             icon: Icons.camera,
             iconColor: Colors.orange,

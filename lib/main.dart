@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/providers/dept_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/screens/add_transaction_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/scan_bill_page.dart';
@@ -27,11 +28,19 @@ Future<void> main() async {
     //await WidgetService.updateTodayExpenseWidget();
   }
   runApp(
-    ChangeNotifierProvider(
-      create: (_) => TransactionProvider()..loadTransactions(),
-      child: MyApp(isLoggedIn: isLoggedIn),
-    ),
-  );
+  MultiProvider(
+    providers: [
+      ChangeNotifierProvider(
+        create: (_) => TransactionProvider()..loadTransactions(),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => DebtProvider()..loadDebts(),
+      ),
+    ],
+    child: MyApp(isLoggedIn: isLoggedIn),
+  ),
+);
+
 }
 
 class MyApp extends StatefulWidget {
