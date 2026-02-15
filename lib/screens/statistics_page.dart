@@ -30,7 +30,7 @@ class _StatisticsPageState extends State<StatisticsPage>
       appBar: AppBar(
         backgroundColor: const Color(0xFF121826),
         centerTitle: true,
-        title: const Text("Thống kê"),
+        title: const Text("Thống kê", style: TextStyle(fontWeight: FontWeight.w700),),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
