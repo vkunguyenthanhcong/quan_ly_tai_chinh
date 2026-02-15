@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/screens/add_transaction_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/scan_bill_page.dart';
 import 'package:quan_ly_chi_tieu/services/transaction_service.dart';
@@ -8,8 +10,7 @@ import 'screens/main_screen.dart';
 import 'services/auth_service.dart';
 import 'package:home_widget/home_widget.dart';
 
-final GlobalKey<NavigatorState> navigatorKey =
-    GlobalKey<NavigatorState>();
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,12 +23,15 @@ Future<void> main() async {
   final authService = AuthService();
   final isLoggedIn = await authService.isLoggedIn();
   final WidgetService = TransactionService();
-  // 🔥 AUTO UPDATE WIDGET KHI APP START
   if (isLoggedIn) {
     //await WidgetService.updateTodayExpenseWidget();
   }
-
-  runApp(MyApp(isLoggedIn: isLoggedIn));
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => TransactionProvider()..loadTransactions(),
+      child: MyApp(isLoggedIn: isLoggedIn),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -48,8 +52,7 @@ class _MyAppState extends State<MyApp> {
       if (uri == null) return;
 
       if (uri.path == '/add-transaction') {
-        navigatorKey.currentState
-            ?.pushNamed('/add-transaction');
+        navigatorKey.currentState?.pushNamed('/add-transaction');
       }
 
       if (uri.path == '/scan') {
@@ -62,11 +65,9 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       navigatorKey: navigatorKey,
-      debugShowCheckedModeBanner: false,  
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.dark(useMaterial3: true),
-      home: widget.isLoggedIn
-          ? const MainScreen()
-          : const LoginScreen(),
+      home: widget.isLoggedIn ? const MainScreen() : const LoginScreen(),
       routes: {
         '/add-transaction': (_) => const AddTransactionScreen(),
         '/scan': (_) => const ScanBillPage(),

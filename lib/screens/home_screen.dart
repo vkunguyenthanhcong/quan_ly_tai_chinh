@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
-
+import 'package:provider/provider.dart';
 import '../widgets/header_user.dart';
 import '../widgets/overview_chart.dart';
 import '../widgets/transaction_section.dart';
-
-import '../services/transaction_service.dart';
+import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -12,80 +11,58 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final transactionService = TransactionService();
-  
+    final provider = context.watch<TransactionProvider>();
+
+    if (provider.isLoading) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121826),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
+
+    final transactions = provider.transactions;
+
+    if (transactions.isEmpty) {
+      return const Scaffold(
+        backgroundColor: Color(0xFF121826),
+        body: Center(
+          child: Text(
+            "Chưa có giao dịch nào",
+            style: TextStyle(color: Colors.white54),
+          ),
+        ),
+      );
+    }
+
+    final grouped = _groupByDate(transactions);
+
     return Scaffold(
       backgroundColor: const Color(0xFF121826),
       body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.all(16),
-          children: [
-            const HeaderUser(),
-            const SizedBox(height: 16),
-            const OverviewChart(),
-            const SizedBox(height: 20),
+        child: RefreshIndicator(
+          onRefresh: provider.loadTransactions,
+          child: ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            children: [
+              const HeaderUser(),
+              const SizedBox(height: 16),
+              const OverviewChart(),
+              const SizedBox(height: 20),
 
-            /// ================= TRANSACTIONS =================
-            FutureBuilder<List<Map<String, dynamic>>>(
-              future: transactionService.getTransactions(),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 40),
-                    child: Center(child: CircularProgressIndicator()),
-                  );
-                }
-
-                if (snapshot.hasError) {
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 20),
-                    child: Text(
-                      snapshot.error.toString(),
-                      style: const TextStyle(color: Colors.red),
-                    ),
-                  );
-                }
-
-                final data = snapshot.data ?? [];
-                if (data.isEmpty) {
-                  return const Padding(
-                    padding: EdgeInsets.only(top: 20),
-                    child: Text(
-                      "Chưa có giao dịch nào",
-                      style: TextStyle(color: Colors.white54),
-                    ),
-                  );
-                }
-
-                /// Map DB → Model
-                final transactions = data
-                    .map((e) => TransactionModel.fromMap(e))
-                    .toList();
-
-                /// Group theo date
-                final grouped = _groupByDate(transactions);
-
-                return Column(
-                  children: grouped.entries.map((entry) {
-                    final date = entry.key;
-                    final list = entry.value;
-
-                    return TransactionSection(
-                      date: _formatDate(date),
-                      day: _weekday(date),
-                      transactions: list,
-                    );
-                  }).toList(),
+              ...grouped.entries.map((entry) {
+                return TransactionSection(
+                  date: _formatDate(entry.key),
+                  day: _weekday(entry.key),
+                  transactions: entry.value,
                 );
-              },
-            ),
-          ],
+              }),
+            ],
+          ),
         ),
       ),
     );
   }
-
-  // ================= HELPER =================
 
   Map<DateTime, List<TransactionModel>> _groupByDate(
     List<TransactionModel> transactions,
@@ -94,7 +71,6 @@ class HomeScreen extends StatelessWidget {
 
     for (final t in transactions) {
       final key = DateTime(t.date.year, t.date.month, t.date.day);
-
       grouped.putIfAbsent(key, () => []);
       grouped[key]!.add(t);
     }

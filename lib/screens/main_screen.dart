@@ -134,7 +134,7 @@ void initState() {
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const AddTransactionScreen(),
+              builder: (context) => const AddTransactionScreen(),
             ),
           );
         },

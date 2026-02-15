@@ -59,31 +59,27 @@ Future<void> updateTodayExpenseWidget() async {
 
   return List<Map<String, dynamic>>.from(res);
 }
-Future<void> addTransaction({
-    required String categoryId,
-    required String title,
-    required int amount,
-    required String type, // expense | income
-    String? note,
-    required DateTime date,
-  }) async {
-    final prefs = await SharedPreferences.getInstance();
+
+    Future<void> addTransaction({
+  required String categoryId,
+  required String title,
+  required int amount,
+  required String type,
+  required String note,
+  required DateTime date,
+}) async {
+  final prefs = await SharedPreferences.getInstance();
     final userId = prefs.getString('user_id');
-
-    if (userId == null) {
-      throw Exception("Chưa đăng nhập");
-    }
-
-    await supabase.from('transactions').insert({
-      'user_id': userId,
-      'category_id': categoryId,
-      'title': title,
-      'amount': amount,
-      'type': type,
-      'note': note,
-      'date': date.toIso8601String().substring(0, 10),
-    });
-  }
+  await supabase.from('transactions').insert({
+    'user_id' : userId,
+    'category_id': categoryId,
+    'title': title,
+    'amount': amount,
+    'type': type,
+    'note': note,
+    'date': date.toIso8601String(),
+  });
+}
 
 Future<Map<String, int>> getSummary() async {
   final prefs = await SharedPreferences.getInstance();

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:quan_ly_chi_tieu/core/theme/app_button.dart';
 import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
+import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/widgets/app_toast.dart';
 import '../services/category_service.dart';
 import '../services/transaction_service.dart';
+import 'package:provider/provider.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -125,22 +127,23 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => isSaving = true);
 
     try {
-      await transactionService.addTransaction(
-        categoryId: categoryId!,
-        title: titleCtrl.text.trim(),
-        amount: amount,
-        type: transactionType,
-        note: "",
-        date: selectedDate,
-      );
-      //await transactionService.updateTodayExpenseWidget();
+      await context.read<TransactionProvider>().addTransaction(
+  categoryId: categoryId!,
+  title: titleCtrl.text.trim(),
+  amount: amount,
+  type: transactionType,
+  note: "",
+  date: selectedDate,
+);
 
+      //await transactionService.updateTodayExpenseWidget();
+    
       if (!mounted) return;
       _showSnack("Đã thêm giao dịch", Colors.green);
       await Future.delayed(const Duration(milliseconds: 200));
       Navigator.pop(context, true);
     } catch (e) {
-      _showSnack("Lỗi", Colors.red);
+      _showSnack(e.toString(), Colors.red);
     } finally {
       if (mounted) setState(() => isSaving = false);
     }
