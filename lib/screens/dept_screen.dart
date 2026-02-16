@@ -3,7 +3,9 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:quan_ly_chi_tieu/models/dept_model.dart';
+import 'package:quan_ly_chi_tieu/providers/category_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/dept_provider.dart';
+import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/screens/add_dept_screen.dart';
 
 final _moneyFormat = NumberFormat('#,###', 'vi_VN');
@@ -108,8 +110,32 @@ class DebtPage extends StatelessWidget {
         children: [
           /// ===== ĐÃ TRẢ =====
           SlidableAction(
-            onPressed: (context) {
-              context.read<DebtProvider>().markAsPaid(debt.id);
+            onPressed: (context) async {
+              final categoryProvider = context.read<CategoryProvider>();
+              final transactionProvider = context.read<TransactionProvider>();
+              final debtProvider = context.read<DebtProvider>();
+
+              final type = debt.type == "borrowed_to_me" ? "income" : "expense";
+
+              /// 1️⃣ lấy category trước
+              final categoryId = await categoryProvider.getOrCreateDebtCategory(
+                type,
+              );
+
+              /// 2️⃣ thêm transaction
+              await transactionProvider.addTransaction(
+                categoryId: categoryId,
+                title: debt.type == "borrowed_to_me" ? "${debt.personName} trả nợ" : "Trả nợ ${debt.personName}",
+                amount: debt.amount,
+                type: type,
+                note: debt.type == "borrowed_to_me"
+                    ? "${debt.personName} trả nợ"
+                    : "Trả nợ cho ${debt.personName}",
+                date: DateTime.now(),
+              );
+
+              /// 3️⃣ cập nhật debt
+              await debtProvider.markAsPaid(debt.id);
             },
             backgroundColor: Colors.green,
             foregroundColor: Colors.white,
@@ -117,7 +143,6 @@ class DebtPage extends StatelessWidget {
             label: "Đã trả",
           ),
 
-          /// ===== XÓA =====
           SlidableAction(
             onPressed: (context) {
               context.read<DebtProvider>().deleteDebt(debt.id);
@@ -141,7 +166,10 @@ class DebtPage extends StatelessWidget {
           ),
           title: Text(
             debt.personName,
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
           ),
           subtitle: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,7 +188,11 @@ class DebtPage extends StatelessWidget {
             children: [
               Text(
                 amount,
-                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 16),
+                style: TextStyle(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
               ),
               const SizedBox(height: 6),
               GestureDetector(

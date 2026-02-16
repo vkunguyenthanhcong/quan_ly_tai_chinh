@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/providers/category_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/dept_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/screens/add_transaction_screen.dart';
@@ -35,6 +36,9 @@ Future<void> main() async {
       ),
       ChangeNotifierProvider(
         create: (_) => DebtProvider()..loadDebts(),
+      ),
+      ChangeNotifierProvider(
+        create: (_) => CategoryProvider()..loadCategories(),
       ),
     ],
     child: MyApp(isLoggedIn: isLoggedIn),
