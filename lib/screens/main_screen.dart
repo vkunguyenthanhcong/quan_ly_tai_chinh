@@ -66,7 +66,7 @@ import 'home_screen.dart';
 import 'wallet_page.dart';
 import '../widgets/bottom_nav.dart';
 import 'add_transaction_screen.dart';
-
+import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
 
@@ -110,6 +110,21 @@ void initState() {
     }
   });
 }
+Widget _miniAction({
+  required IconData icon,
+  required Color color,
+}) {
+  return Container(
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      color: color,
+      shape: BoxShape.circle,
+    ),
+    child: Icon(icon, color: Colors.white, size: 20),
+  );
+}
+
 
 
   @override
@@ -125,21 +140,53 @@ void initState() {
           });
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.blueAccent,
-        shape: const CircleBorder(),
-        elevation: 6,
-        child: const Icon(Icons.add),
-        onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const AddTransactionScreen(),
-            ),
-          );
-        },
+      floatingActionButton: SpeedDial(
+  icon: Icons.add,
+  activeIcon: Icons.close,
+  backgroundColor: Colors.blueAccent,
+  foregroundColor: Colors.white,
+  overlayColor: Colors.black,
+  overlayOpacity: 0.4,
+  spacing: 12,
+  spaceBetweenChildren: 12,
+
+  children: [
+    SpeedDialChild(
+      child: _miniAction(
+        icon: Icons.edit,
+        color: Colors.green,
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      backgroundColor: Colors.transparent, // 👈 QUAN TRỌNG
+      elevation: 0,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const AddTransactionScreen(),
+          ),
+        );
+      },
+    ),
+    SpeedDialChild(
+      child: _miniAction(
+        icon: Icons.qr_code_scanner,
+        color: Colors.orange,
+      ),
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ScanBillPage(),
+          ),
+        );
+      },
+    ),
+    
+  ],
+),
+floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
     );
   }
 }
