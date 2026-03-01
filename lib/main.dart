@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_theme.dart';
 import 'package:quan_ly_chi_tieu/providers/category_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/dept_provider.dart';
 import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
@@ -79,7 +80,7 @@ class _MyAppState extends State<MyApp> {
     return MaterialApp(
       navigatorKey: navigatorKey,
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.dark(useMaterial3: true),
+      theme: AppTheme.light,
       home: widget.isLoggedIn ? const MainScreen() : const LoginScreen(),
       routes: {
         '/add-transaction': (_) => const AddTransactionScreen(),

@@ -33,17 +33,21 @@ class TransactionSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                date,
-                style: const TextStyle(
-                  color: Colors.white70,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                day,
-                style: const TextStyle(color: Colors.white38),
-              ),
+             Text(
+  date,
+  style: const TextStyle(
+    color: Color(0xFF0F172A), // navy đậm
+    fontWeight: FontWeight.w600,
+    fontSize: 14,
+  ),
+),
+Text(
+  day,
+  style: const TextStyle(
+    color: Color(0xFF64748B), // slate gray
+    fontSize: 12,
+  ),
+),
             ],
           ),
         ),
@@ -56,12 +60,12 @@ class TransactionSection extends StatelessWidget {
               direction: DismissDirection.endToStart,
               background: _deleteBackground(),
               confirmDismiss: (_) async {
-                  return await BeautifulConfirmDialog.show(
-                    context,
-                    title: "Xoá giao dịch?",
-                    message: "Bạn có chắc muốn xoá giao dịch này không?",
-                  );
-                },
+                return await BeautifulConfirmDialog.show(
+                  context,
+                  title: "Xoá giao dịch?",
+                  message: "Bạn có chắc muốn xoá giao dịch này không?",
+                );
+              },
 
               onDismissed: (_) async {
                 await transactionService.deleteTransaction(tran.id);
@@ -98,13 +102,7 @@ class TransactionSection extends StatelessWidget {
         color: Colors.red,
         borderRadius: BorderRadius.circular(14),
       ),
-      child: const Icon(
-        Icons.delete,
-        color: Colors.white,
-        size: 28,
-      ),
+      child: const Icon(Icons.delete, color: Colors.white, size: 28),
     );
   }
-
-  
 }

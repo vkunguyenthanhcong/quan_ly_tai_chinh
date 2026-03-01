@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import 'category_grid_screen.dart';
 
 class ManageCategoryScreen extends StatelessWidget {
@@ -9,14 +10,25 @@ class ManageCategoryScreen extends StatelessWidget {
     return DefaultTabController(
       length: 2,
       child: Scaffold(
-        backgroundColor: const Color(0xFF121826),
+        backgroundColor: AppColors.background,
         appBar: AppBar(
-          backgroundColor: const Color(0xFF121826),
+          backgroundColor: AppColors.background,
           elevation: 0,
-          leading: BackButton(color: Colors.white),
-          title: const Text('Chọn nhóm giao dịch'),
+          centerTitle: true,
+          leading: const BackButton(
+            color: AppColors.textPrimary,
+          ),
+          title: const Text(
+            'Chọn nhóm giao dịch',
+            style: TextStyle(
+              color: AppColors.textPrimary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
           bottom: const TabBar(
-            indicatorColor: Colors.white,
+            indicatorColor: AppColors.accent,
+            labelColor: AppColors.textPrimary,
+            unselectedLabelColor: AppColors.textSecondary,
             tabs: [
               Tab(text: 'Chi tiêu'),
               Tab(text: 'Thu nhập'),

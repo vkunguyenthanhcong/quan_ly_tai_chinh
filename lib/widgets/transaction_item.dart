@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 
 class TransactionItem extends StatelessWidget {
   final String title;
   final String category;
   final String amount;
   final String? icon;
-
 
   const TransactionItem({
     super.key,
@@ -15,51 +15,110 @@ class TransactionItem extends StatelessWidget {
     required this.icon,
   });
 
-  Widget _icon() {
-  if (icon == null || icon!.isEmpty) {
-    return const Icon(Icons.category, color: Colors.white);
+  bool get isExpense => amount.startsWith("-");
+
+  Widget _buildIcon() {
+    if (icon == null || icon!.isEmpty) {
+      return const Icon(
+        Icons.category,
+        color: AppColors.textPrimary,
+        size: 20,
+      );
+    }
+
+    return Image.asset(
+      icon!,
+      width: 22,
+      height: 22,
+      errorBuilder: (_, __, ___) => const Icon(
+        Icons.category,
+        color: AppColors.textPrimary,
+        size: 20,
+      ),
+    );
   }
-  return Image.asset(
-    icon!,
-    width: 50,
-    height: 50,
-    errorBuilder: (_, __, ___) =>
-        const Icon(Icons.category, color: Colors.white),
-  );
-}
 
   @override
   Widget build(BuildContext context) {
+    final amountColor =
+        isExpense ? AppColors.expense : AppColors.income;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(12),
+      margin: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1E2538),
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.06),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
       ),
       child: Row(
         children: [
-          CircleAvatar(
-            child: _icon(),
-            backgroundColor: Colors.white,
+          /// ICON
+          Container(
+            width: 46,
+            height: 46,
+            decoration: BoxDecoration(
+              color: AppColors.background,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: Center(child: _buildIcon()),
           ),
-          const SizedBox(width: 12),
+
+          const SizedBox(width: 14),
+
+          /// TEXT
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(category, style: const TextStyle(color: Colors.white38)),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: AppColors.textPrimary,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  category,
+                  style: const TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
-          Text(
-            amount,
-            style: TextStyle(
-              color: amount.startsWith("-") ? Colors.redAccent : Colors.greenAccent,
-              fontWeight: FontWeight.bold,
-            ),
-          )
+
+          /// AMOUNT
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                amount,
+                style: TextStyle(
+                  color: amountColor,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Icon(
+                isExpense
+                    ? Icons.arrow_downward_rounded
+                    : Icons.arrow_upward_rounded,
+                size: 14,
+                color: amountColor.withOpacity(0.8),
+              ),
+            ],
+          ),
         ],
       ),
     );

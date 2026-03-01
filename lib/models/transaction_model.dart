@@ -17,9 +17,11 @@ class TransactionModel {
     this.categoryIcon,
   });
 
+  /// ================= FROM SUPABASE =================
   factory TransactionModel.fromMap(Map<String, dynamic> map) {
     final category = map['categories'];
-    final store = category != null ? category['category_store'] : null;
+    final store =
+        category != null ? category['category_store'] : null;
 
     return TransactionModel(
       id: map['id'].toString(),
@@ -32,9 +34,14 @@ class TransactionModel {
     );
   }
 
-  Map<String, dynamic> toMap() {
+  /// ================= TO MAP (INSERT/UPDATE) =================
+  Map<String, dynamic> toMap({
+    required String userId,
+    required String categoryId,
+  }) {
     return {
-      'id': id,
+      'user_id': userId,
+      'category_id': categoryId,
       'title': title,
       'amount': amount,
       'type': type,
@@ -42,6 +49,7 @@ class TransactionModel {
     };
   }
 
+  /// ================= COPY WITH =================
   TransactionModel copyWith({
     String? id,
     String? title,

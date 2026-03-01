@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../core/theme/app_colors.dart';
+
 class BottomNav extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
@@ -11,22 +13,30 @@ class BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BottomAppBar(
-      color: const Color(0xFF1E2538),
-      shape: const CircularNotchedRectangle(),
-      notchMargin: 8, // 👈 giúp FAB không dính
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _item(Icons.list, 0),
-            _item(Icons.account_balance_wallet, 1),
-            const SizedBox(width: 48), // 👈 chừa chỗ cho FAB
-            _item(Icons.pie_chart, 3),
-            _item(Icons.settings, 4),
-          ],
-        ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      height: 72,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(30),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _item(Icons.home_rounded, 0),
+          _item(Icons.account_balance_wallet_rounded, 1),
+          const SizedBox(width: 56),
+          _item(Icons.pie_chart_rounded, 3),
+          _item(Icons.settings_rounded, 4),
+        ],
       ),
     );
   }
@@ -34,11 +44,24 @@ class BottomNav extends StatelessWidget {
   Widget _item(IconData icon, int index) {
     final isActive = currentIndex == index;
 
-    return IconButton(
-      onPressed: () => onTap(index),
-      icon: Icon(
-        icon,
-        color: isActive ? Colors.blueAccent : Colors.white54,
+    return GestureDetector(
+      onTap: () => onTap(index),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: isActive
+              ? AppColors.primary.withOpacity(0.08)
+              : Colors.transparent,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(
+          icon,
+          size: 24,
+          color: isActive
+              ? AppColors.primary
+              : AppColors.textSecondary,
+        ),
       ),
     );
   }

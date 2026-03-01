@@ -48,33 +48,6 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     amountCtrl.addListener(_updateQuickAmounts);
   }
 
-  @override
-  void dispose() {
-    titleCtrl.dispose();
-    amountCtrl.dispose();
-    noteCtrl.dispose();
-    amountFocus.dispose();
-    super.dispose();
-  }
-
-  // ================= LOGIC (GIỮ NGUYÊN) =================
-
-  Future<void> _loadCategories() async {
-    try {
-      final data = await categoryService.getUserCategories();
-      if (!mounted) return;
-      setState(() {
-        categories = data;
-        loadingCategory = false;
-      });
-      _syncCategoryWithType();
-    } catch (e) {
-      if (!mounted) return;
-      Navigator.pop(context);
-      _showSnack(e.toString(), Colors.red);
-    }
-  }
-
   List<Map<String, dynamic>> get filteredCategories {
     return categories.where((c) {
       final store = c['category_store'];
@@ -95,6 +68,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() => categoryId = list.first['id']);
   }
 
+  Future<void> _loadCategories() async {
+    try {
+      final data = await categoryService.getUserCategories();
+      if (!mounted) return;
+      setState(() {
+        categories = data;
+        loadingCategory = false;
+      });
+      _syncCategoryWithType();
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.pop(context);
+      _showSnack(e.toString(), Colors.red);
+    }
+  }
+
   void _updateQuickAmounts() {
     if (!showQuickAmount) {
       setState(() => quickAmounts = []);
@@ -110,58 +99,32 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
-  Future<void> _saveTransaction() async {
-    if (categoryId == null ||
-        titleCtrl.text.trim().isEmpty ||
-        amountCtrl.text.trim().isEmpty) {
-      _showSnack("Vui lòng nhập đầy đủ thông tin", Colors.orange);
-      return;
-    }
-
-    final amount = int.tryParse(amountCtrl.text.trim());
-    if (amount == null || amount <= 0) {
-      _showSnack("Số tiền không hợp lệ", Colors.orange);
-      return;
-    }
-
-    setState(() => isSaving = true);
-
-    try {
-      await context.read<TransactionProvider>().addTransaction(
-  categoryId: categoryId!,
-  title: titleCtrl.text.trim(),
-  amount: amount,
-  type: transactionType,
-  note: "",
-  date: selectedDate,
-);
-
-      //await transactionService.updateTodayExpenseWidget();
-    
-      if (!mounted) return;
-      _showSnack("Đã thêm giao dịch", Colors.green);
-      await Future.delayed(const Duration(milliseconds: 200));
-      Navigator.pop(context, true);
-    } catch (e) {
-      _showSnack(e.toString(), Colors.red);
-    } finally {
-      if (mounted) setState(() => isSaving = false);
-    }
+  @override
+  void dispose() {
+    titleCtrl.dispose();
+    amountCtrl.dispose();
+    noteCtrl.dispose();
+    amountFocus.dispose();
+    super.dispose();
   }
 
-  // ================= UI (CHỈ SỬA GIAO DIỆN) =================
+  // ================= UI =================
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1629),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1629),
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
+        iconTheme: const IconThemeData(color: AppColors.textPrimary),
         title: const Text(
           "Giao dịch mới",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
       body: SafeArea(
@@ -218,14 +181,53 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     );
   }
 
+  Future<void> _saveTransaction() async {
+    if (categoryId == null ||
+        titleCtrl.text.trim().isEmpty ||
+        amountCtrl.text.trim().isEmpty) {
+      _showSnack("Vui lòng nhập đầy đủ thông tin", Colors.orange);
+      return;
+    }
+
+    final amount = int.tryParse(amountCtrl.text.trim());
+    if (amount == null || amount <= 0) {
+      _showSnack("Số tiền không hợp lệ", Colors.orange);
+      return;
+    }
+
+    setState(() => isSaving = true);
+
+    try {
+      await context.read<TransactionProvider>().addTransaction(
+        categoryId: categoryId!,
+        title: titleCtrl.text.trim(),
+        amount: amount,
+        type: transactionType,
+        note: "",
+        date: selectedDate,
+      );
+
+      //await transactionService.updateTodayExpenseWidget();
+
+      if (!mounted) return;
+      _showSnack("Đã thêm giao dịch", Colors.green);
+      await Future.delayed(const Duration(milliseconds: 200));
+      Navigator.pop(context, true);
+    } catch (e) {
+      _showSnack(e.toString(), Colors.red);
+    } finally {
+      if (mounted) setState(() => isSaving = false);
+    }
+  }
   // ================= COMPONENT UI =================
 
   Widget _card({required Widget child}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1B2440),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.divider),
       ),
       child: child,
     );
@@ -237,7 +239,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       child: Text(
         text,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontSize: 16,
           fontWeight: FontWeight.bold,
         ),
@@ -260,25 +262,28 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           Text(
             label,
             style: const TextStyle(
-              color: Colors.blueAccent,
+              color: AppColors.textSecondary,
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 6),
           Container(
             decoration: BoxDecoration(
-              color: const Color(0xFF232E52),
+              color: AppColors.surface,
               borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.divider),
             ),
             child: TextField(
               controller: ctrl,
               focusNode: focusNode,
               keyboardType: keyboardType,
               maxLines: maxLines,
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: AppColors.textPrimary),
               decoration: const InputDecoration(
-                contentPadding:
-                    EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                contentPadding: EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
                 border: InputBorder.none,
               ),
             ),
@@ -298,9 +303,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           return ElevatedButton(
             style: ElevatedButton.styleFrom(
               elevation: 0,
-              backgroundColor: const Color(0xFF2F3A5F),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              backgroundColor: AppColors.accent.withOpacity(0.08),
+              foregroundColor: AppColors.accent,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -311,7 +316,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             },
             child: Text(
               _formatMoney(value),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(fontWeight: FontWeight.w600),
             ),
           );
         }).toList(),
@@ -324,17 +329,12 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       DropdownButtonHideUnderline(
         child: DropdownButtonFormField<String>(
           value: transactionType,
-          dropdownColor: const Color(0xFF232E52),
+          dropdownColor: AppColors.surface,
           decoration: const InputDecoration(border: InputBorder.none),
+          style: const TextStyle(color: AppColors.textPrimary),
           items: const [
-            DropdownMenuItem(
-              value: 'expense',
-              child: Text("Chi tiêu", style: TextStyle(color: Colors.white)),
-            ),
-            DropdownMenuItem(
-              value: 'income',
-              child: Text("Thu nhập", style: TextStyle(color: Colors.white)),
-            ),
+            DropdownMenuItem(value: 'expense', child: Text("Chi tiêu")),
+            DropdownMenuItem(value: 'income', child: Text("Thu nhập")),
           ],
           onChanged: (value) {
             if (value == null) return;
@@ -356,7 +356,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         child: DropdownButton<String>(
           value: categoryId,
           isExpanded: true,
-          dropdownColor: const Color(0xFF232E52),
+          dropdownColor: AppColors.surface,
+          style: const TextStyle(color: AppColors.textPrimary),
           items: list.map((item) {
             final store = item['category_store'] as Map<String, dynamic>;
             final String? iconPath = store['icon'];
@@ -378,7 +379,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                     const SizedBox(width: 10),
                   Text(
                     store['name'],
-                    style: const TextStyle(color: Colors.white),
+                    style: const TextStyle(color: Colors.black),
                   ),
                 ],
               ),
@@ -409,9 +410,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           children: [
             Text(
               "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}",
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(color: AppColors.textPrimary),
             ),
-            const Icon(Icons.calendar_today, color: Colors.white54, size: 18),
+            const Icon(
+              Icons.calendar_today,
+              color: AppColors.textSecondary,
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -423,8 +428,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       margin: const EdgeInsets.only(bottom: 14),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: const Color(0xFF232E52),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.divider),
       ),
       child: child,
     );

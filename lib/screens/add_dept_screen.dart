@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import 'package:quan_ly_chi_tieu/providers/dept_provider.dart';
 
 class AddDebtScreen extends StatefulWidget {
@@ -13,14 +14,18 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
   final _nameCtrl = TextEditingController();
   final _amountCtrl = TextEditingController();
   final _noteCtrl = TextEditingController();
+
+  final FocusNode amountFocus = FocusNode();
+
   bool showQuickAmount = false;
   List<int> quickAmounts = [];
   String _type = 'borrowed_to_me';
-  final FocusNode amountFocus = FocusNode();
   bool _isSaving = false;
+
   @override
   void initState() {
     super.initState();
+
     amountFocus.addListener(() {
       setState(() => showQuickAmount = amountFocus.hasFocus);
       _updateQuickAmounts();
@@ -28,171 +33,118 @@ class _AddDebtScreenState extends State<AddDebtScreen> {
 
     _amountCtrl.addListener(_updateQuickAmounts);
   }
+
   void _updateQuickAmounts() {
     if (!showQuickAmount) {
       setState(() => quickAmounts = []);
       return;
     }
+
     final base = int.tryParse(_amountCtrl.text.trim());
+
     if (base == null || base <= 0) {
       setState(() => quickAmounts = []);
       return;
     }
+
     setState(() {
       quickAmounts = [base * 100, base * 1000, base * 10000];
     });
   }
-@override
-void dispose() {
-  amountFocus.dispose();
-  _amountCtrl.dispose();
-  _nameCtrl.dispose();
-  _noteCtrl.dispose();
-  super.dispose();
-}
-  Widget _typeDropdown() {
-    return DropdownButtonHideUnderline(
-      child: DropdownButtonFormField<String>(
-        value: _type,
-        dropdownColor: const Color(0xFF232E52),
-        decoration: const InputDecoration(border: InputBorder.none),
-        items: const [
-          DropdownMenuItem(
-            value: 'borrowed_to_me',
-            child: Text(
-              "Người khác nợ tôi",
-              style: TextStyle(color: Colors.white),
-            ),
-          ),
-          DropdownMenuItem(
-            value: 'i_owe',
-            child: Text("Tôi đang nợ", style: TextStyle(color: Colors.white)),
-          ),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _type = value!;
-          });
-        },
-      ),
-    );
+
+  @override
+  void dispose() {
+    amountFocus.dispose();
+    _amountCtrl.dispose();
+    _nameCtrl.dispose();
+    _noteCtrl.dispose();
+    super.dispose();
   }
 
   Future<void> _save() async {
-  final amount = int.tryParse(_amountCtrl.text.trim());
+    final amount = int.tryParse(_amountCtrl.text.trim());
 
-  if (_nameCtrl.text.isEmpty || amount == null || amount <= 0) return;
+    if (_nameCtrl.text.isEmpty || amount == null || amount <= 0) return;
 
-  setState(() => _isSaving = true);
+    setState(() => _isSaving = true);
 
-  await context.read<DebtProvider>().addDebt(
-    personName: _nameCtrl.text.trim(),
-    amount: amount,
-    type: _type,
-    note: _noteCtrl.text.trim(),
-  );
+    await context.read<DebtProvider>().addDebt(
+          personName: _nameCtrl.text.trim(),
+          amount: amount,
+          type: _type,
+          note: _noteCtrl.text.trim(),
+        );
 
-  if (!mounted) return;
-  Navigator.pop(context);
-}
+    if (!mounted) return;
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1629),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.background,
         elevation: 0,
         centerTitle: true,
         title: const Text(
           "Thêm khoản nợ",
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontWeight: FontWeight.w700,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Container(
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: const Color(0xFF1B2440),
-                borderRadius: BorderRadius.circular(14),
-              ),
+
+            /// ===== TYPE SELECTOR =====
+            _typeSelector(),
+
+            const SizedBox(height: 24),
+            if (quickAmounts.isNotEmpty) _quickAmountButtons(),
+
+            const SizedBox(height: 24),
+
+            /// ===== INFO CARD =====
+            _infoCard(
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    "Thông tin khoản nợ",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
                   _input(_nameCtrl, "Tên người"),
-
-                  const SizedBox(height: 12),
-
-                  _input(
-                    _amountCtrl,
-                    "Số tiền",
-                    keyboardType: TextInputType.number,
-                    focusNode: amountFocus
-                  ),
-                   if (quickAmounts.isNotEmpty) _quickAmountButtons(),
-
-                  const SizedBox(height: 12),
-
-                  _input(_noteCtrl, "Ghi chú"),
+                  _input(_amountCtrl, "Số tiền"),
+                  _input(_noteCtrl, "Ghi chú", maxLines: 2),
                 ],
               ),
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 32),
 
-            _card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [_sectionTitle("Danh mục"), _typeDropdown()],
-              ),
-            ),
-
-            const SizedBox(height: 30),
-
-            /// ===== BUTTON =====
+            /// ===== SAVE BUTTON =====
             SizedBox(
               width: double.infinity,
-              height: 55,
+              height: 56,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
+                  backgroundColor: AppColors.accent,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  padding: EdgeInsets.zero,
+                  elevation: 4,
                 ),
                 onPressed: _isSaving ? null : _save,
-                child: Ink(
-                  decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF3A86FF), Color(0xFF4361EE)],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Center(
-                    child: _isSaving
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            "LƯU KHOẢN NỢ",
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: Colors.white,
-                            ),
-                          ),
-                  ),
-                ),
+                child: _isSaving
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text(
+                        "LƯU KHOẢN NỢ",
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          letterSpacing: 0.5,
+                          color: Colors.white,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -200,19 +152,69 @@ void dispose() {
       ),
     );
   }
+
+  /// ================= TYPE SELECTOR =================
+
+  Widget _typeSelector() {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(color: AppColors.divider),
+      ),
+      child: Row(
+        children: [
+          _typeOption("borrowed_to_me", "Người nợ tôi"),
+          _typeOption("i_owe", "Tôi đang nợ"),
+        ],
+      ),
+    );
+  }
+
+  Widget _typeOption(String value, String label) {
+    final selected = _type == value;
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => _type = value),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: selected ? AppColors.accent : Colors.transparent,
+            borderRadius: BorderRadius.circular(30),
+          ),
+          alignment: Alignment.center,
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected
+                  ? Colors.white
+                  : AppColors.textSecondary,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// ================= AMOUNT INPUT =================
+
+  
+
+  /// ================= QUICK AMOUNT =================
+
   Widget _quickAmountButtons() {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 14),
+      padding: const EdgeInsets.only(top: 12),
       child: Wrap(
         spacing: 10,
         runSpacing: 10,
         children: quickAmounts.map((value) {
-          return ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              elevation: 0,
-              backgroundColor: const Color(0xFF2F3A5F),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          return OutlinedButton(
+            style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.divider),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
@@ -223,86 +225,102 @@ void dispose() {
             },
             child: Text(
               _formatMoney(value),
-              style: const TextStyle(color: Colors.white),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           );
         }).toList(),
       ),
     );
   }
- String _formatMoney(int value) {
-  return "${value.toString().replaceAllMapped(
-    RegExp(r'(\d)(?=(\d{3})+(?!\d))'),
-    (m) => '${m[1]}.',
-  )} đ";
-}
 
-}
+  /// ================= INPUT =================
 
-
-Widget _input(
+  Widget _input(
   TextEditingController ctrl,
   String label, {
-  TextInputType keyboardType = TextInputType.text,
-  FocusNode? focusNode,
   int maxLines = 1,
 }) {
   return Padding(
-    padding: const EdgeInsets.only(bottom: 14),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.blueAccent, fontSize: 13),
-        ),
-        const SizedBox(height: 6),
-        Container(
-          decoration: BoxDecoration(
-            color: const Color(0xFF232E52),
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: TextField(
-            controller: ctrl,
-            focusNode: focusNode,
-            keyboardType: keyboardType,
-            maxLines: maxLines,
-            style: const TextStyle(color: Colors.white),
-            decoration: const InputDecoration(
-              contentPadding: EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              border: InputBorder.none,
-            ),
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-Widget _sectionTitle(String text) {
-  return Padding(
-    padding: const EdgeInsets.only(bottom: 12),
-    child: Text(
-      text,
+    padding: const EdgeInsets.only(bottom: 18),
+    child: TextField(
+      controller: ctrl,
+      maxLines: maxLines,
       style: const TextStyle(
-        color: Colors.white,
-        fontSize: 16,
-        fontWeight: FontWeight.bold,
+        color: AppColors.textPrimary,
+        fontSize: 15,
+        fontWeight: FontWeight.w500,
+      ),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 14,
+        ),
+
+        filled: true,
+        fillColor: AppColors.surface.withOpacity(0.6),
+
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 18,
+          vertical: 16,
+        ),
+
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: AppColors.divider,
+            width: 1,
+          ),
+        ),
+
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: AppColors.divider,
+            width: 1,
+          ),
+        ),
+
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(20),
+          borderSide: const BorderSide(
+            color: AppColors.accent,
+            width: 1.5,
+          ),
+        ),
       ),
     ),
   );
 }
 
-Widget _card({required Widget child}) {
-  return Container(
-    padding: const EdgeInsets.all(16),
-    decoration: BoxDecoration(
-      color: const Color(0xFF1B2440),
-      borderRadius: BorderRadius.circular(20),
-    ),
-    child: child,
-  );
+  /// ================= CARD =================
+
+  Widget _infoCard({required Widget child}) {
+    return Container(
+      
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+
+  String _formatMoney(int value) {
+    return "${value.toString().replaceAllMapped(
+      RegExp(r'(\\d)(?=(\\d{3})+(?!\\d))'),
+      (m) => '${m[1]}.',
+    )} đ";
+  }
 }

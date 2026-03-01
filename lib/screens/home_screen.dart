@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import '../widgets/header_user.dart';
 import '../widgets/overview_chart.dart';
 import '../widgets/transaction_section.dart';
 import '../providers/transaction_provider.dart';
 import '../models/transaction_model.dart';
-
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
 
@@ -15,8 +15,12 @@ class HomeScreen extends StatelessWidget {
 
     if (provider.isLoading) {
       return const Scaffold(
-        backgroundColor: Color(0xFF121826),
-        body: Center(child: CircularProgressIndicator()),
+        backgroundColor: AppColors.background,
+        body: Center(
+          child: CircularProgressIndicator(
+            color: AppColors.accent,
+          ),
+        ),
       );
     }
 
@@ -24,11 +28,13 @@ class HomeScreen extends StatelessWidget {
 
     if (transactions.isEmpty) {
       return const Scaffold(
-        backgroundColor: Color(0xFF121826),
+        backgroundColor: AppColors.background,
         body: Center(
           child: Text(
             "Chưa có giao dịch nào",
-            style: TextStyle(color: Colors.white54),
+            style: TextStyle(
+              color: AppColors.textSecondary,
+            ),
           ),
         ),
       );
@@ -37,9 +43,10 @@ class HomeScreen extends StatelessWidget {
     final grouped = _groupByDate(transactions);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF121826),
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
+          color: AppColors.accent,
           onRefresh: provider.loadTransactions,
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),

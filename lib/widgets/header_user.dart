@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import '../services/user_service.dart';
-import '../models/user_model.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
+import 'package:quan_ly_chi_tieu/models/user_model.dart';
+import 'package:quan_ly_chi_tieu/services/user_service.dart';
 
 class HeaderUser extends StatelessWidget {
   const HeaderUser({super.key});
@@ -25,35 +26,44 @@ class HeaderUser extends StatelessWidget {
 
         return Row(
           children: [
+            /// ===== AVATAR =====
             CircleAvatar(
               radius: 24,
+              backgroundColor: AppColors.accent.withOpacity(0.15),
               backgroundImage: user.avatarUrl != null
                   ? NetworkImage(user.avatarUrl!)
                   : null,
-              backgroundColor: Colors.blueAccent,
               child: user.avatarUrl == null
                   ? Text(
                       user.fullName[0].toUpperCase(),
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppColors.accent,
                         fontWeight: FontWeight.bold,
+                        fontSize: 18,
                       ),
                     )
                   : null,
             ),
+
             const SizedBox(width: 12),
+
+            /// ===== TEXT =====
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
                   "Xin chào 👋",
-                  style: TextStyle(color: Colors.white54),
+                  style: TextStyle(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
                 ),
                 Text(
                   user.fullName,
                   style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
                   ),
                 ),
               ],
@@ -66,13 +76,19 @@ class HeaderUser extends StatelessWidget {
 
   Widget _loading() {
     return Row(
-      children: const [
-        CircleAvatar(radius: 24, backgroundColor: Colors.white24),
-        SizedBox(width: 12),
-        SizedBox(
+      children: [
+        CircleAvatar(
+          radius: 24,
+          backgroundColor: AppColors.textSecondary.withOpacity(0.1),
+        ),
+        const SizedBox(width: 12),
+        Container(
           height: 14,
           width: 120,
-          child: LinearProgressIndicator(),
+          decoration: BoxDecoration(
+            color: AppColors.textSecondary.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(6),
+          ),
         ),
       ],
     );

@@ -9,7 +9,13 @@ class AppCard extends StatelessWidget {
     required this.child,
     this.padding = const EdgeInsets.all(16),
   });
-
+static List<BoxShadow> softShadow = [
+  BoxShadow(
+    color: Colors.black.withOpacity(0.04),
+    blurRadius: 20,
+    offset: const Offset(0, 8),
+  ),
+];
   @override
   Widget build(BuildContext context) {
     return Card(

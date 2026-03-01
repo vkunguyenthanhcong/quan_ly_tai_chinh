@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import 'package:quan_ly_chi_tieu/screens/app_info_page.dart';
 import 'package:quan_ly_chi_tieu/screens/dept_screen.dart';
 import 'package:quan_ly_chi_tieu/screens/manage_category_screen.dart';
@@ -11,14 +12,17 @@ class SettingsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121826),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF121826),
+        backgroundColor: AppColors.background,
         elevation: 0,
-        
+        centerTitle: true,
         title: const Text(
           "Cài đặt",
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            color: AppColors.textPrimary,
+          ),
         ),
       ),
       body: ListView(
@@ -26,89 +30,84 @@ class SettingsPage extends StatelessWidget {
         children: [
           _settingItem(
             icon: Icons.translate,
-            iconColor: Colors.blue,
+            iconColor: AppColors.accent,
             title: "Ngôn ngữ",
             onTap: () {},
           ),
           _settingItem(
-            icon: Icons.category,
-            iconColor: Colors.purple,
+            icon: Icons.category_outlined,
+            iconColor: Colors.deepPurple,
             title: "Quản lý thể loại",
             onTap: () {
               Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ManageCategoryScreen(),
-      ),
-    );
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ManageCategoryScreen(),
+                ),
+              );
             },
-            
           ),
           _settingItem(
-            icon: Icons.money,
-            iconColor: Colors.red,
+            icon: Icons.account_balance_wallet_outlined,
+            iconColor: AppColors.expense,
             title: "Quản lý khoản nợ",
             onTap: () {
               Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const DebtPage(),
-      ),
-    );
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const DebtPage(),
+                ),
+              );
             },
-            
           ),
-          
           _settingItem(
-            icon: Icons.camera,
+            icon: Icons.camera_alt_outlined,
             iconColor: Colors.orange,
             title: "Quét Bill Tự Động",
             onTap: () {
               Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const ScanBillPage(),
-      ),
-    );
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ScanBillPage(),
+                ),
+              );
             },
           ),
           _settingItem(
-            icon: Icons.people,
+            icon: Icons.people_outline,
             iconColor: Colors.green,
             title: "Bạn bè",
             onTap: () {},
           ),
           _settingItem(
-            icon: Icons.person,
-            iconColor: Colors.teal,
+            icon: Icons.person_outline,
+            iconColor: AppColors.primary,
             title: "Tài khoản",
             onTap: () {
               Navigator.push(
-  context,
-  MaterialPageRoute(builder: (_) => const ProfileScreen()),
-);
+                context,
+                MaterialPageRoute(builder: (_) => const ProfileScreen()),
+              );
             },
           ),
           _settingItem(
-            icon: Icons.notifications,
+            icon: Icons.notifications_none,
             iconColor: Colors.amber,
             title: "Thông báo",
             badge: "1",
             onTap: () {},
           ),
           _settingItem(
-  icon: Icons.info_outline,
-  iconColor: Colors.blueGrey,
-  title: "Thông tin ứng dụng",
-  onTap: () {
-    
+            icon: Icons.info_outline,
+            iconColor: Colors.blueGrey,
+            title: "Thông tin ứng dụng",
+            onTap: () {
               Navigator.push(
-  context,
-  MaterialPageRoute(builder: (_) => const AppInfoPage()),
-);
-  },
-),
-
+                context,
+                MaterialPageRoute(builder: (_) => const AppInfoPage()),
+              );
+            },
+          ),
         ],
       ),
     );
@@ -126,38 +125,51 @@ class SettingsPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(14),
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(18),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: ListTile(
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
         leading: CircleAvatar(
-          backgroundColor: iconColor.withOpacity(0.15),
+          backgroundColor: iconColor.withOpacity(0.12),
           child: Icon(icon, color: iconColor),
         ),
         title: Text(
           title,
           style: const TextStyle(
             fontWeight: FontWeight.w600,
-            color: Colors.black
+            color: AppColors.textPrimary,
           ),
         ),
         trailing: badge != null
             ? Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: Colors.red,
-                  borderRadius: BorderRadius.circular(10),
+                  color: AppColors.expense,
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
                   badge,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 12,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               )
-            : const Icon(Icons.chevron_right),
+            : const Icon(
+                Icons.chevron_right_rounded,
+                color: AppColors.textSecondary,
+              ),
         onTap: onTap,
       ),
     );

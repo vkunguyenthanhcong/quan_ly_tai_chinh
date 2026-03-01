@@ -3,23 +3,20 @@ import 'package:intl/intl.dart';
 import '../services/transaction_service.dart';
 
 final _moneyFormat = NumberFormat('#,###', 'vi_VN');
-
 class WalletSummaryCard extends StatelessWidget {
-  const WalletSummaryCard({super.key});
+  final DateTime month;
+
+  const WalletSummaryCard({super.key, required this.month});
 
   @override
   Widget build(BuildContext context) {
     final service = TransactionService();
 
     return FutureBuilder<Map<String, int>>(
-      future: service.getSummary(),
+      future: service.getSummaryByMonth(month),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
+        if (!snapshot.hasData) {
           return _loading();
-        }
-
-        if (snapshot.hasError) {
-          return _error(snapshot.error.toString());
         }
 
         final data = snapshot.data!;
@@ -32,73 +29,77 @@ class WalletSummaryCard extends StatelessWidget {
         final expenseRatio = total == 0 ? 0.0 : expense / total;
 
         return Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: const Color(0xFF2A2F3E),
-            borderRadius: BorderRadius.circular(18),
+            gradient: const LinearGradient(
+              colors: [Color(0xFF1E293B), Color(0xFF111827)],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.4),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              /// ===== BALANCE =====
+              /// HEADER
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "Tài khoản của tôi",
+                    "Tổng số dư",
                     style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
                     ),
                   ),
                   Text(
-                    "${_moneyFormat.format(balance)} đ",
+                    DateFormat('MM/yyyy').format(month),
                     style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
+                      color: Color(0xFF94A3B8),
+                      fontSize: 13,
                     ),
                   ),
                 ],
               ),
 
-              const SizedBox(height: 20),
+              const SizedBox(height: 8),
 
-              /// ===== INCOME =====
-              const Text("Thu nhập",
-                  style: TextStyle(color: Colors.white)),
-              const SizedBox(height: 6),
-              LinearProgressIndicator(
-                value: incomeRatio,
-                minHeight: 8,
-                backgroundColor: Colors.white24,
-                valueColor:
-                    const AlwaysStoppedAnimation(Colors.greenAccent),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              const SizedBox(height: 6),
+              /// BALANCE
               Text(
-                "+${_moneyFormat.format(income)} đ",
-                style: const TextStyle(color: Colors.greenAccent),
+                "${_moneyFormat.format(balance)} đ",
+                style: const TextStyle(
+                  color: Color(0xFFF1F5F9),
+                  fontSize: 26,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+
+              const SizedBox(height: 24),
+
+              /// INCOME
+              _progress(
+                label: "Thu nhập",
+                value: incomeRatio,
+                amount: income,
+                color: const Color(0xFF22C55E),
               ),
 
               const SizedBox(height: 16),
 
-              /// ===== EXPENSE =====
-              const Text("Chi tiêu",
-                  style: TextStyle(color: Colors.white)),
-              const SizedBox(height: 6),
-              LinearProgressIndicator(
+              /// EXPENSE
+              _progress(
+                label: "Chi tiêu",
                 value: expenseRatio,
-                minHeight: 8,
-                backgroundColor: Colors.white24,
-                valueColor:
-                    const AlwaysStoppedAnimation(Colors.redAccent),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "-${_moneyFormat.format(expense)} đ",
-                style: const TextStyle(color: Colors.redAccent),
+                amount: expense,
+                color: const Color(0xFFEF4444),
+                isExpense: true,
               ),
             ],
           ),
@@ -107,31 +108,50 @@ class WalletSummaryCard extends StatelessWidget {
     );
   }
 
-  // ================= STATES =================
-
-  Widget _loading() {
-    return Container(
-      height: 160,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2F3E),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: const CircularProgressIndicator(),
+  Widget _progress({
+    required String label,
+    required double value,
+    required int amount,
+    required Color color,
+    bool isExpense = false,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label,
+            style: const TextStyle(
+              color: Color(0xFF94A3B8),
+              fontSize: 13,
+            )),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: LinearProgressIndicator(
+            value: value,
+            minHeight: 10,
+            backgroundColor: Colors.white10,
+            valueColor: AlwaysStoppedAnimation(color),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          "${isExpense ? "-" : "+"}${_moneyFormat.format(amount)} đ",
+          style: TextStyle(
+            color: color,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _error(String text) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2A2F3E),
-        borderRadius: BorderRadius.circular(18),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(color: Colors.red),
-      ),
-    );
-  }
+  Widget _loading() => Container(
+        height: 180,
+        decoration: BoxDecoration(
+          color: const Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(24),
+        ),
+        alignment: Alignment.center,
+        child: const CircularProgressIndicator(),
+      );
 }
