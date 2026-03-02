@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:intl/intl.dart';
 import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import '../services/statistic_service.dart';
 
@@ -9,7 +10,7 @@ class StatisticsPage extends StatefulWidget {
   @override
   State<StatisticsPage> createState() => _StatisticsPageState();
 }
-
+final _moneyFormat = NumberFormat('#,###', 'vi_VN');
 class _StatisticsPageState extends State<StatisticsPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
@@ -182,7 +183,8 @@ class _StatisticTab extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    _money(data.total),
+                    "${_moneyFormat.format((data.total))} đ"
+                    ,
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
@@ -232,8 +234,6 @@ class _StatisticTab extends StatelessWidget {
     );
   }
 
-  String _money(int v) =>
-      "${v.toString().replaceAllMapped(RegExp(r'(\\d)(?=(\\d{3})+(?!\\d))'), (m) => '${m[1]}.')} đ";
 
   BarChartData _bar(Map<int, int> data) {
     final maxY = data.isEmpty

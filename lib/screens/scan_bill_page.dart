@@ -6,6 +6,7 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:quan_ly_chi_tieu/core/theme/app_button.dart';
+import 'package:quan_ly_chi_tieu/core/theme/app_colors.dart';
 import 'package:quan_ly_chi_tieu/providers/transaction_provider.dart';
 import 'package:quan_ly_chi_tieu/services/transaction_service.dart';
 import 'package:quan_ly_chi_tieu/widgets/app_toast.dart';
@@ -386,11 +387,19 @@ class _ScanBillPageState extends State<ScanBillPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF121826),
+      backgroundColor: AppColors.background,
       appBar: AppBar(
-        title: const Text("Quét Bill"),
-        backgroundColor: const Color(0xFF121826),
-      ),
+  title: const Text(
+    "Quét Bill",
+    style: TextStyle(
+      color: AppColors.textPrimary,
+      fontWeight: FontWeight.w600,
+    ),
+  ),
+  backgroundColor: AppColors.background,
+  elevation: 0,
+  iconTheme: const IconThemeData(color: AppColors.textPrimary),
+),
       body: _loadingCategory
           ? const Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
@@ -414,7 +423,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
     return Text(
       text,
       style: const TextStyle(
-        color: Colors.white,
+        color: AppColors.textPrimary,
         fontSize: 16,
         fontWeight: FontWeight.w600,
         letterSpacing: 0.3,
@@ -426,9 +435,9 @@ class _ScanBillPageState extends State<ScanBillPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2035),
+        color: AppColors.surface,
+border: Border.all(color: AppColors.divider),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white10),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.35),
@@ -449,7 +458,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
             child: const Icon(
               Icons.document_scanner_rounded,
               size: 48,
-              color: Colors.blueAccent,
+              color: AppColors.background,
             ),
           ),
 
@@ -458,7 +467,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
           const Text(
             "Quét hóa đơn",
             style: TextStyle(
-              color: Colors.white,
+            color: AppColors.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.w600,
             ),
@@ -481,6 +490,8 @@ class _ScanBillPageState extends State<ScanBillPage> {
               icon: const Icon(Icons.camera_alt_rounded),
               label: const Text("Chụp hóa đơn"),
               style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+  foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
@@ -498,8 +509,9 @@ class _ScanBillPageState extends State<ScanBillPage> {
               icon: const Icon(Icons.image_rounded),
               label: const Text("Chọn từ thư viện"),
               style: OutlinedButton.styleFrom(
+              side: const BorderSide(color: AppColors.divider),
+  foregroundColor: AppColors.primary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                side: const BorderSide(color: Colors.white24),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -529,7 +541,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
       title: Text(
         title,
         style: const TextStyle(
-          color: Colors.white,
+          color: AppColors.textPrimary,
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
@@ -541,7 +553,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
   void _showRescanOptions() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A2035),
+      backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -614,7 +626,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withOpacity(0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 6),
                 ),
@@ -689,7 +701,7 @@ class _ScanBillPageState extends State<ScanBillPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A2035),
+        color: AppColors.surface,
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
@@ -732,20 +744,20 @@ class _ScanBillPageState extends State<ScanBillPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: const Color(0xFF232A44),
+        color: AppColors.background,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: selectedCategoryId == null
-              ? Colors.redAccent.withOpacity(0.6)
-              : Colors.transparent,
-        ),
+  color: selectedCategoryId == null
+      ? AppColors.expense.withOpacity(0.5)
+      : AppColors.divider,
+),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _bills[_currentIndex].selectedCategoryId,
           isExpanded: true,
-          dropdownColor: const Color(0xFF232A44),
-          icon: const Icon(Icons.expand_more, color: Colors.white54),
+          dropdownColor: AppColors.background,
+          icon: const Icon(Icons.expand_more, color: AppColors.textSecondary),
           hint: const Text(
             "Chọn loại chi tiêu *",
             style: TextStyle(color: Colors.white38),
@@ -760,7 +772,10 @@ class _ScanBillPageState extends State<ScanBillPage> {
                   const SizedBox(width: 10),
                   Text(
                     store['name'],
-                    style: const TextStyle(color: Colors.white, fontSize: 14),
+                    style: const TextStyle(
+  color: AppColors.textPrimary,
+  fontSize: 14,
+),
                   ),
                 ],
               ),
@@ -805,17 +820,28 @@ class _ScanBillPageState extends State<ScanBillPage> {
           return TextField(
             controller: ctrl,
             keyboardType: keyboard,
-            style: const TextStyle(color: Colors.white, fontSize: 15),
+            style: const TextStyle(
+  color: AppColors.textPrimary,
+  fontSize: 15,
+),
+
             decoration: InputDecoration(
               labelText: label,
-              labelStyle: const TextStyle(color: Colors.white54, fontSize: 13),
-              floatingLabelStyle: const TextStyle(color: Colors.blueAccent),
+              labelStyle: const TextStyle(
+  color: AppColors.textSecondary,
+  fontSize: 13,
+),
+              floatingLabelStyle: const TextStyle(
+  color: AppColors.accent,
+),
               filled: true,
-              fillColor: const Color(0xFF232A44),
+             fillColor: AppColors.background,
+
               contentPadding: const EdgeInsets.symmetric(
                 horizontal: 16,
                 vertical: 14,
               ),
+              
 
               /// 🔥 NÚT XOÁ NHANH
               suffixIcon: ctrl.text.isNotEmpty

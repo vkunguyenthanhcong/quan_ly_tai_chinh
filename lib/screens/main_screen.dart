@@ -124,7 +124,7 @@ class _MainScreenState extends State<MainScreen> {
           },
         ),
         _dialItem(
-          icon: Icons.qr_code_scanner,
+          icon: Icons.camera,
           color: const Color(0xFFF59E0B),
           onTap: () {
             Navigator.push(

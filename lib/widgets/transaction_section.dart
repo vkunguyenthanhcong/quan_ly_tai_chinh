@@ -33,21 +33,21 @@ class TransactionSection extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-             Text(
-  date,
-  style: const TextStyle(
-    color: Color(0xFF0F172A), // navy đậm
-    fontWeight: FontWeight.w600,
-    fontSize: 14,
-  ),
-),
-Text(
-  day,
-  style: const TextStyle(
-    color: Color(0xFF64748B), // slate gray
-    fontSize: 12,
-  ),
-),
+              Text(
+                date,
+                style: const TextStyle(
+                  color: Color(0xFF0F172A), // navy đậm
+                  fontWeight: FontWeight.w600,
+                  fontSize: 14,
+                ),
+              ),
+              Text(
+                day,
+                style: const TextStyle(
+                  color: Color(0xFF64748B), // slate gray
+                  fontSize: 12,
+                ),
+              ),
             ],
           ),
         ),
